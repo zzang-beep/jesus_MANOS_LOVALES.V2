@@ -1,0 +1,53 @@
+name: manos_locales
+description: App para conectar vecinos con servicios locales
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  # Firebase share aaron
+    # otras dependencias que tengas...
+  shared_preferences: ^2.1.1
+
+  # Firebase Core (OBLIGATORIO)
+  firebase_core: ^4.2.1
+  
+  # Firebase Services
+  firebase_auth: ^6.1.2           # Autenticación de usuarios
+  cloud_firestore: ^6.1.0         # Base de datos
+  firebase_storage: ^13.0.4       # Almacenamiento de imágenes
+  
+  # State Management
+  provider: ^6.1.5+1                # Gestión de estado
+  
+  # UI & Images
+  image_picker: ^1.2.0             # Seleccionar fotos
+  cached_network_image: ^3.4.1     # Caché de imágenes
+  
+  # Utils
+  intl: ^0.20.2                    # Formateo de fechas
+  http: ^1.6.0                     # HTTP requests (SMS)
+  url_launcher: ^6.3.2            # Abrir WhatsApp/teléfono
+  
+  # Icons
+  cupertino_icons: ^1.0.8
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/images/background_pattern.png
+    - assets/images/inicio1.png
+    - assets/images/inicio2.png
+    - assets/images/inicio3.png
+    - assets/images/logo.png
+    - assets/images/fondodeapp.png
+
+  #   - assets/icons/
