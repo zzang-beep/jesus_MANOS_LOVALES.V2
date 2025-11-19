@@ -1,20 +1,34 @@
 import 'package:flutter/material.dart';
 
+import 'models/chat_contact.dart';
+import 'services/chat_contact_service.dart';
+import 'screens/chat.dart';
+
 class DetalleCandidatoScreen extends StatelessWidget {
   const DetalleCandidatoScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
     // Esperamos un Map<String, dynamic> con los datos del candidato
-    final args =
-        ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
+    final args = ModalRoute.of(context)?.settings.arguments;
 
-    final nombre = args?['nombre'] ?? 'Nombre no disponible';
-    final profesion = args?['profesion'] ?? 'Profesión no disponible';
-    final experiencia = args?['experiencia'] ?? '';
-    final ubicacion = args?['ubicacion'] ?? '';
-    final foto = args?['foto'] ?? 'assets/images/logo.png';
-    final edad = args?['edad']?.toString() ?? ''; // opcional
+    String nombre = 'Nombre no disponible';
+    String profesion = 'Profesión no disponible';
+    String experiencia = 'Sin experiencia declarada';
+    String ubicacion = 'Zona sin especificar';
+    String descripcion = '';
+    String foto = 'assets/images/logo.png';
+    String id = DateTime.now().millisecondsSinceEpoch.toString();
+
+    if (args is Map<String, dynamic>) {
+      nombre = args['nombre'] ?? nombre;
+      profesion = args['profesion'] ?? profesion;
+      experiencia = args['experiencia'] ?? experiencia;
+      ubicacion = args['zona'] ?? args['ubicacion'] ?? ubicacion;
+      descripcion = args['descripcion'] ?? descripcion;
+      foto = args['foto'] ?? foto;
+      id = args['id']?.toString() ?? id;
+    }
 
     return Scaffold(
       appBar: AppBar(
@@ -25,54 +39,137 @@ class DetalleCandidatoScreen extends StatelessWidget {
         ),
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(20),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            // foto circular
             CircleAvatar(
               radius: 60,
-              backgroundImage: AssetImage(foto),
+              backgroundImage: foto.startsWith('http')
+                  ? NetworkImage(foto)
+                  : AssetImage(foto) as ImageProvider,
             ),
             const SizedBox(height: 12),
             Text(
               nombre,
-              style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+              style: const TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+              ),
             ),
-            const SizedBox(height: 6),
-            Text(profesion, style: const TextStyle(fontSize: 16)),
-            if (edad.isNotEmpty) ...[
-              const SizedBox(height: 6),
-              Text('Edad: $edad'),
-            ],
-            const SizedBox(height: 8),
+            const SizedBox(height: 4),
             Text(
-              ubicacion,
-              style: const TextStyle(color: Colors.white70),
+              profesion,
+              style: const TextStyle(fontSize: 16, color: Colors.white70),
             ),
             const SizedBox(height: 12),
-            if (experiencia.isNotEmpty)
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              decoration: BoxDecoration(
+                color: Colors.blueGrey.withOpacity(0.3),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Text('Experiencia', style: TextStyle(fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 6),
-                  Text(experiencia),
+                  const Icon(Icons.location_on,
+                      color: Colors.lightBlueAccent, size: 18),
+                  const SizedBox(width: 6),
+                  Text(
+                    ubicacion,
+                    style: const TextStyle(color: Colors.white70),
+                  ),
                 ],
               ),
-            const SizedBox(height: 20),
-            ElevatedButton.icon(
-              icon: const Icon(Icons.message),
-              label: const Text('Contactar'),
-              onPressed: () {
-                // acción de ejemplo: por ahora no funcional
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Función de contacto no implementada')),
-                );
-              },
+            ),
+            const SizedBox(height: 24),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Experiencia',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    experiencia,
+                    style: const TextStyle(color: Colors.white70, height: 1.4),
+                  ),
+                  const SizedBox(height: 16),
+                  const Text(
+                    'Sobre la persona',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    descripcion.isEmpty
+                        ? 'Aún no hay una descripción detallada para este perfil.'
+                        : descripcion,
+                    style: const TextStyle(color: Colors.white70, height: 1.4),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 24),
+            Row(
+              children: [
+                Expanded(
+                  child: ElevatedButton.icon(
+                    icon: const Icon(Icons.person_add_alt),
+                    label: const Text('Agregar a contactos'),
+                    onPressed: () =>
+                        _contactCandidate(context, id, nombre, profesion, ubicacion),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: OutlinedButton.icon(
+                    icon: const Icon(Icons.message),
+                    label: const Text('Chatear'),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: Colors.lightBlueAccent,
+                      side: const BorderSide(color: Colors.lightBlueAccent),
+                    ),
+                    onPressed: () =>
+                        _contactCandidate(context, id, nombre, profesion, ubicacion),
+                  ),
+                ),
+              ],
             ),
           ],
         ),
       ),
+    );
+  }
+
+  Future<void> _contactCandidate(
+    BuildContext context,
+    String candidateId,
+    String name,
+    String bio,
+    String zona,
+  ) async {
+    final contact = ChatContact(
+      userId: candidateId,
+      name: name,
+      bio: bio,
+      zone: zona,
+    );
+
+    await ChatContactService().addContact(contact);
+    if (!context.mounted) return;
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => ChatScreen(contact: contact)),
     );
   }
 }

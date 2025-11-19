@@ -105,7 +105,7 @@ class _MyActiveServicesScreenState extends State<MyActiveServicesScreen> {
                     ),
                     const SizedBox(width: 12),
                     const Text(
-                      'Mis servicios',
+                      'Mis servicios activos',
                       style: TextStyle(
                         color: Colors.white,
                         fontSize: 24,
@@ -218,20 +218,75 @@ class _MyActiveServicesScreenState extends State<MyActiveServicesScreen> {
 
           const SizedBox(height: 20),
 
-          // Botón Finalizar
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton(
-              onPressed: () => _finalizeJob(service.serviceId!),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.blue,
-                padding: const EdgeInsets.symmetric(vertical: 12),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+          Row(
+            children: [
+              const Icon(Icons.location_on,
+                  color: Colors.white38, size: 18),
+              const SizedBox(width: 6),
+              Expanded(
+                child: Text(
+                  service.locationText,
+                  style: const TextStyle(
+                    color: Colors.white70,
+                    fontSize: 13,
+                  ),
                 ),
               ),
-              child: const Text('Finalizar trabajo'),
-            ),
+              const SizedBox(width: 12),
+              Text(
+                service.formattedPrice,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+
+          const SizedBox(height: 16),
+
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: () {
+                    Navigator.pushNamed(
+                      context,
+                      '/detalle_puesto',
+                      arguments: {
+                        'titulo': service.title,
+                        'descripcion': service.description,
+                        'precio': service.formattedPrice,
+                        'ubicacion': service.locationText,
+                        'foto': service.photoUrl,
+                        'servicio': service,
+                      },
+                    );
+                  },
+                  style: OutlinedButton.styleFrom(
+                    side: const BorderSide(color: Colors.lightBlueAccent),
+                    foregroundColor: Colors.lightBlueAccent,
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                  ),
+                  child: const Text('Ver detalles'),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: ElevatedButton(
+                  onPressed: () => _finalizeJob(service.serviceId!),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.blue,
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: const Text('Finalizar trabajo'),
+                ),
+              ),
+            ],
           ),
         ],
       ),

@@ -130,30 +130,9 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
                         ),
                         const SizedBox(height: 30),
 
-                        // Botones grandes con navegación
-                        _bigButton("Mis servicios", Icons.work, () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                                builder: (_) => const MyActiveServicesScreen()),
-                          );
-                        }),
-                        _bigButton("Servicios", Icons.shopping_bag, () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                                builder: (_) =>
-                                    const MyServicesRequestsScreen()),
-                          );
-                        }),
-                        _bigButton("Chat", Icons.chat_bubble, () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => const ChatContactoScreen(),
-                            ),
-                          );
-                        }),
+                        _buildSummaryRow(),
+                        const SizedBox(height: 16),
+                        _buildQuickActions(context),
                         const SizedBox(height: 25),
 
                         // Tarjeta de Próximos trabajos (dinámica)
@@ -173,42 +152,160 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
     );
   }
 
-  // BOTONES GRANDES NEGRO AZULADOS
-  Widget _bigButton(String text, IconData icon, VoidCallback onTap) {
+  Widget _buildSummaryRow() {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 8),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(16),
-        child: Container(
-          width: double.infinity,
-          padding: const EdgeInsets.symmetric(vertical: 16),
-          decoration: BoxDecoration(
-            color: const Color(0xFF0D1B2A),
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black54,
-                blurRadius: 8,
-                offset: const Offset(2, 4),
-              ),
-            ],
+      padding: const EdgeInsets.symmetric(horizontal: 24),
+      child: Row(
+        children: [
+          _summaryChip(
+            label: 'Trabajos asignados',
+            value: _assignedJobs.length.toString(),
           ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(icon, color: Colors.lightBlueAccent),
-              const SizedBox(width: 10),
-              Text(
-                text,
-                style: const TextStyle(
-                  color: Colors.lightBlueAccent,
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ],
+          const SizedBox(width: 12),
+          _summaryChip(
+            label: 'Solicitudes activas',
+            value: '—',
           ),
+        ],
+      ),
+    );
+  }
+
+  Widget _summaryChip({required String label, required String value}) {
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: const Color(0xFF0D1B2A),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: Colors.white10),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              value,
+              style: const TextStyle(
+                color: Colors.lightBlueAccent,
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              label,
+              style: const TextStyle(
+                color: Colors.white70,
+                fontSize: 12,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildQuickActions(BuildContext context) {
+    final actions = [
+      _HomeAction(
+        title: 'Mis servicios activos',
+        subtitle: 'Revisa los trabajos donde estás participando.',
+        icon: Icons.work_outline,
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const MyActiveServicesScreen()),
+          );
+        },
+      ),
+      _HomeAction(
+        title: 'Mis solicitudes',
+        subtitle: 'Gestioná a quienes quieren trabajar con vos.',
+        icon: Icons.assignment_outlined,
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+                builder: (_) => const MyServicesRequestsScreen()),
+          );
+        },
+      ),
+      _HomeAction(
+        title: 'Descubrir candidatos',
+        subtitle: 'Encontrá nuevas manos locales por zona.',
+        icon: Icons.people_alt_outlined,
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const DiscoverScreen()),
+          );
+        },
+      ),
+    ];
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 24),
+      child: Column(
+        children: actions
+            .map(
+              (action) => Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: _quickActionCard(action),
+              ),
+            )
+            .toList(),
+      ),
+    );
+  }
+
+  Widget _quickActionCard(_HomeAction action) {
+    return InkWell(
+      onTap: action.onTap,
+      borderRadius: BorderRadius.circular(20),
+      child: Container(
+        padding: const EdgeInsets.all(18),
+        decoration: BoxDecoration(
+          color: const Color(0xFF0D1B2A),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: Colors.white10),
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.lightBlueAccent.withOpacity(0.12),
+                borderRadius: BorderRadius.circular(14),
+              ),
+              child: Icon(action.icon, color: Colors.lightBlueAccent),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    action.title,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    action.subtitle,
+                    style: const TextStyle(
+                      color: Colors.white70,
+                      fontSize: 13,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const Icon(Icons.arrow_forward_ios,
+                color: Colors.white38, size: 16),
+          ],
         ),
       ),
     );
@@ -438,6 +535,20 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
       ],
     );
   }
+}
+
+class _HomeAction {
+  final String title;
+  final String subtitle;
+  final IconData icon;
+  final VoidCallback onTap;
+
+  _HomeAction({
+    required this.title,
+    required this.subtitle,
+    required this.icon,
+    required this.onTap,
+  });
 }
 
   Widget _buildLoggedOutState(BuildContext context) {

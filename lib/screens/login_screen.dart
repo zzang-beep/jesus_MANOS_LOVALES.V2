@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../services/auth_service.dart';
 import '../services/user_service.dart';
@@ -40,10 +41,40 @@ class _LoginScreenState extends State<LoginScreen> {
 
       if (userModel == null) throw 'Error al iniciar sesión';
 
-      // Guardar sesión local (cache útil)
+      final firebaseUser = FirebaseAuth.instance.currentUser;
+      await firebaseUser?.reload();
+
+      if (firebaseUser == null) {
+        throw 'No se pudo obtener el usuario actual';
+      }
+
       final sp = await SharedPreferences.getInstance();
-      await sp.setBool('loggedIn', true);
       await sp.setString('userId', userModel.userId);
+      await sp.setBool('loggedIn', false);
+
+      if (!firebaseUser.emailVerified) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Debes verificar tu correo antes de continuar'),
+          ),
+        );
+        Navigator.pushReplacementNamed(context, '/verify-email');
+        return;
+      }
+
+      if (!userModel.phoneVerified) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Verifica tu teléfono para continuar'),
+          ),
+        );
+        Navigator.pushReplacementNamed(context, '/verify-phone');
+        return;
+      }
+
+      await sp.setBool('loggedIn', true);
 
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(

@@ -1,7 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class Onboarding1Screen extends StatelessWidget {
   const Onboarding1Screen({super.key});
+
+  Future<void> _skipOnboarding(BuildContext context) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('seenOnboarding', true);
+    if (context.mounted) {
+      Navigator.pushReplacementNamed(context, '/terms');
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -47,8 +56,11 @@ class Onboarding1Screen extends StatelessWidget {
                   style: TextStyle(color: Colors.white70, height: 1.4),
                 ),
                 const Spacer(),
-                _buildPaginationRow(context,
-                    activeIndex: 0, nextRoute: '/onboarding2'),
+                _buildPaginationRow(
+                  context,
+                  activeIndex: 0,
+                  nextRoute: '/onboarding2',
+                ),
               ],
             ),
           ),
@@ -57,14 +69,24 @@ class Onboarding1Screen extends StatelessWidget {
     );
   }
 
-  Widget _buildPaginationRow(BuildContext context,
-      {required int activeIndex, required String nextRoute}) {
+  Widget _buildPaginationRow(
+    BuildContext context, {
+    required int activeIndex,
+    required String nextRoute,
+  }) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        _circleButton(Icons.close, () {
-          Navigator.pushReplacementNamed(context, '/login');
-        }),
+        TextButton(
+          onPressed: () => _skipOnboarding(context),
+          child: const Text(
+            'Saltar',
+            style: TextStyle(
+              color: Colors.white70,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ),
         Row(
           children: List.generate(3, (i) {
             return Container(
