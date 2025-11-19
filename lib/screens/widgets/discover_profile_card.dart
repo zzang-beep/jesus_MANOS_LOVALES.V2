@@ -7,12 +7,12 @@ class DiscoverProfileCard extends StatelessWidget {
   final VoidCallback onTapCard;
 
   const DiscoverProfileCard({
-    Key? key,
+    super.key,
     required this.data,
     required this.isPuesto,
     required this.onTapAvatar,
     required this.onTapCard,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

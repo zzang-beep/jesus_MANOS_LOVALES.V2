@@ -7,10 +7,10 @@ class ServiceCardDiscover extends StatelessWidget {
   final VoidCallback onTap;
 
   const ServiceCardDiscover({
-    Key? key,
+    super.key,
     required this.service,
     required this.onTap,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

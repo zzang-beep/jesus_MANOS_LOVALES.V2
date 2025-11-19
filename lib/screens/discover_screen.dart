@@ -11,7 +11,7 @@ import '../screens/profile_screen.dart';
 import '../screens/home_dashboard_screen.dart';
 
 class DiscoverScreen extends StatefulWidget {
-  const DiscoverScreen({Key? key}) : super(key: key);
+  const DiscoverScreen({super.key});
 
   @override
   State<DiscoverScreen> createState() => _DiscoverScreenState();
@@ -258,7 +258,7 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
                         });
                       },
                     );
-                  }).toList(),
+                  }),
                   const SizedBox(height: 20),
                   SizedBox(
                     width: double.infinity,

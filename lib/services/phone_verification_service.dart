@@ -74,7 +74,7 @@ class PhoneVerificationService {
               e.code == 'provider-already-linked') {
             await _auth.signInWithCredential(credential);
           } else {
-            throw e;
+            rethrow;
           }
         }
 

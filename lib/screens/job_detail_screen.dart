@@ -7,10 +7,10 @@ class JobDetailScreen extends StatefulWidget {
   final String status; // "En proceso" o "Finalizado"
 
   const JobDetailScreen({
-    Key? key,
+    super.key,
     required this.serviceId,
     this.status = "En proceso",
-  }) : super(key: key);
+  });
 
   @override
   State<JobDetailScreen> createState() => _JobDetailScreenState();

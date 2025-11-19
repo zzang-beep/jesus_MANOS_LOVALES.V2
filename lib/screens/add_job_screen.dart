@@ -8,7 +8,7 @@ import '../models/service_model.dart';
 import '../models/category_model.dart';
 
 class AddJobScreen extends StatefulWidget {
-  const AddJobScreen({Key? key}) : super(key: key);
+  const AddJobScreen({super.key});
 
   @override
   State<AddJobScreen> createState() => _AddJobScreenState();

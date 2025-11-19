@@ -6,7 +6,7 @@ import '../models/user_model.dart';
 class ProfileViewScreen extends StatefulWidget {
   final String userId;
   
-  const ProfileViewScreen({Key? key, required this.userId}) : super(key: key);
+  const ProfileViewScreen({super.key, required this.userId});
 
   @override
   State<ProfileViewScreen> createState() => _ProfileViewScreenState();

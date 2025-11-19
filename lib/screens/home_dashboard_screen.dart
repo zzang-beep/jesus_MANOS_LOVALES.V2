@@ -14,7 +14,7 @@ import '../services/service_service.dart'; // Para cargar trabajos
 import '../models/service_model.dart'; // Para el modelo de servicios
 
 class HomeDashboardScreen extends StatefulWidget {
-  const HomeDashboardScreen({Key? key}) : super(key: key);
+  const HomeDashboardScreen({super.key});
 
   @override
   State<HomeDashboardScreen> createState() => _HomeDashboardScreenState();

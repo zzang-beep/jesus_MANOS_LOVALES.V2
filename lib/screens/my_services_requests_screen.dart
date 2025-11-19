@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 class MyServicesRequestsScreen extends StatelessWidget {
-  const MyServicesRequestsScreen({Key? key}) : super(key: key);
+  const MyServicesRequestsScreen({super.key});
 
   @override
   Widget build(BuildContext context) {

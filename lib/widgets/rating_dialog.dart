@@ -10,10 +10,10 @@ class RatingDialog extends StatefulWidget {
   final String providerId;
 
   const RatingDialog({
-    Key? key,
+    super.key,
     required this.serviceId,
     required this.providerId,
-  }) : super(key: key);
+  });
 
   @override
   State<RatingDialog> createState() => _RatingDialogState();
