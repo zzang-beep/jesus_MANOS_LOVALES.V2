@@ -48,11 +48,6 @@ class _SplashScreenState extends State<SplashScreen> {
           return;
         }
 
-        if (!user.phoneVerified) {
-          Navigator.pushReplacementNamed(context, '/verify-phone');
-          return;
-        }
-
         Navigator.pushReplacementNamed(context, '/home');
         return;
       }

@@ -25,6 +25,7 @@ import 'detalle_puesto_trabajo_screen.dart';
 import 'screens/forgot_password_email_screen.dart';
 import 'screens/forgot_password_code_screen.dart';
 import 'screens/forgot_password_change_screen.dart';
+import 'mapa_servicios_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -75,6 +76,7 @@ class MyApp extends StatelessWidget {
               const ForgotPasswordCodeScreen(),
           '/forgot-password-change': (context) =>
               const ForgotPasswordChangeScreen(),
+          '/mapa-servicios': (context) => const MapaServiciosScreen(),
         },
       ),
     );

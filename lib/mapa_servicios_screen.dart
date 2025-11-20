@@ -10,7 +10,7 @@ import 'package:geocoding/geocoding.dart';
 class MapaServiciosScreen extends StatefulWidget {
   final String? filterCategory;
   
-  const MapaServiciosScreen({Key? key, this.filterCategory}) : super(key: key);
+  const MapaServiciosScreen({super.key, this.filterCategory});
 
   @override
   State<MapaServiciosScreen> createState() => _MapaServiciosScreenState();
@@ -26,6 +26,7 @@ class _MapaServiciosScreenState extends State<MapaServiciosScreen> {
   Set<Marker> _markers = {};
   ServiceModel? _selectedService;
   bool _isLoading = true;
+  bool _mapAvailable = true;
   Position? _currentPosition;
   String? _errorMessage;
   
@@ -209,15 +210,19 @@ class _MapaServiciosScreenState extends State<MapaServiciosScreen> {
 
   Future<void> _centerMapOnUserLocation() async {
     if (_currentPosition != null) {
-      final controller = await _controller.future;
-      controller.animateCamera(
-        CameraUpdate.newCameraPosition(
-          CameraPosition(
-            target: LatLng(_currentPosition!.latitude, _currentPosition!.longitude),
-            zoom: 14.0,
+      try {
+        final controller = await _controller.future;
+        controller.animateCamera(
+          CameraUpdate.newCameraPosition(
+            CameraPosition(
+              target: LatLng(_currentPosition!.latitude, _currentPosition!.longitude),
+              zoom: 14.0,
+            ),
           ),
-        ),
-      );
+        );
+      } catch (_) {
+        setState(() => _mapAvailable = false);
+      }
     }
   }
 
@@ -352,36 +357,59 @@ class _MapaServiciosScreenState extends State<MapaServiciosScreen> {
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(17),
-        child: Stack(
-          children: [
-            GoogleMap(
-              mapType: MapType.normal,
-              initialCameraPosition: CameraPosition(
-                target: initialPosition,
-                zoom: 13.0,
+        child: !_mapAvailable
+            ? Container(
+                color: const Color(0xFF0A1A3A),
+                alignment: Alignment.center,
+                child: const Text(
+                  'No se pudo cargar el mapa.\nRevisa tu conexión o clave de Maps.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(color: Colors.white70),
+                ),
+              )
+            : Stack(
+                children: [
+                  GoogleMap(
+                    mapType: MapType.normal,
+                    initialCameraPosition: CameraPosition(
+                      target: initialPosition,
+                      zoom: 13.0,
+                    ),
+                    markers: _markers,
+                    onMapCreated: (GoogleMapController controller) {
+                      try {
+                        if (!_controller.isCompleted) {
+                          _controller.complete(controller);
+                        }
+                        setState(() => _mapAvailable = true);
+                      } catch (_) {
+                        setState(() => _mapAvailable = false);
+                      }
+                    },
+                    onCameraIdle: () {
+                      if (!_mapAvailable) return;
+                    },
+                    onCameraMoveStarted: () {
+                      if (!_mapAvailable) return;
+                    },
+                    zoomControlsEnabled: false,
+                    myLocationEnabled: false,
+                    myLocationButtonEnabled: false,
+                    mapToolbarEnabled: false,
+                  ),
+                  if (_selectedService != null) _buildInfoCard(),
+                  Positioned(
+                    bottom: 16,
+                    right: 16,
+                    child: FloatingActionButton(
+                      mini: true,
+                      backgroundColor: const Color(0xFF001F3F),
+                      onPressed: _centerMapOnUserLocation,
+                      child: const Icon(Icons.my_location, color: Colors.white, size: 20),
+                    ),
+                  ),
+                ],
               ),
-              markers: _markers,
-              onMapCreated: (GoogleMapController controller) {
-                _controller.complete(controller);
-              },
-              zoomControlsEnabled: false,
-              myLocationEnabled: true,
-              myLocationButtonEnabled: false,
-              mapToolbarEnabled: false,
-            ),
-            if (_selectedService != null) _buildInfoCard(),
-            Positioned(
-              bottom: 16,
-              right: 16,
-              child: FloatingActionButton(
-                mini: true,
-                backgroundColor: const Color(0xFF001F3F),
-                onPressed: _centerMapOnUserLocation,
-                child: const Icon(Icons.my_location, color: Colors.white, size: 20),
-              ),
-            ),
-          ],
-        ),
       ),
     );
   }

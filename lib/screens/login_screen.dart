@@ -64,17 +64,6 @@ class _LoginScreenState extends State<LoginScreen> {
         return;
       }
 
-      if (!userModel.phoneVerified) {
-        if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Verifica tu teléfono para continuar'),
-          ),
-        );
-        Navigator.pushReplacementNamed(context, '/verify-phone');
-        return;
-      }
-
       await sp.setBool('loggedIn', true);
 
       if (!mounted) return;
@@ -235,14 +224,14 @@ class _LoginScreenState extends State<LoginScreen> {
     bool obscure = false,
     TextInputType inputType = TextInputType.text,
   }) {
-    final validator = (String? v) {
+    String? validator(String? v) {
       if (v == null || v.isEmpty) return 'Campo obligatorio';
       if (label.toLowerCase().contains('correo') &&
           !RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(v)) {
         return 'Email inválido';
       }
       return null;
-    };
+    }
 
     if (obscure) {
       return PasswordToggleTextField(

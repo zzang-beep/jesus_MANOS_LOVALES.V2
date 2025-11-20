@@ -133,6 +133,8 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
                         _buildSummaryRow(),
                         const SizedBox(height: 16),
                         _buildQuickActions(context),
+                        const SizedBox(height: 20),
+                        _buildMapExploreCard(context),
                         const SizedBox(height: 25),
 
                         // Tarjeta de Próximos trabajos (dinámica)
@@ -550,6 +552,61 @@ class _HomeAction {
     required this.onTap,
   });
 }
+
+  Widget _buildMapExploreCard(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 24),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(18),
+        decoration: BoxDecoration(
+          color: const Color(0xFF091836),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: Colors.white12),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Explorar en el mapa',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 6),
+            const Text(
+              'Encuentra trabajadores y publicaciones según tu ubicación actual.',
+              style: TextStyle(color: Colors.white70, fontSize: 13),
+            ),
+            const SizedBox(height: 12),
+            Align(
+              alignment: Alignment.centerRight,
+              child: ElevatedButton(
+                onPressed: () => Navigator.pushNamed(context, '/mapa-servicios'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF244BFF),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
+                ),
+                child: const Text(
+                  'Ver mapa',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 
   Widget _buildLoggedOutState(BuildContext context) {
     return Center(

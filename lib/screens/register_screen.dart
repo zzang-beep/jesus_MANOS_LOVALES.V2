@@ -78,7 +78,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       await _authService.sendEmailVerification();
 
       // Enviar OTP via Firebase PhoneAuth (espera hasta que codeSent)
-      await _phoneService.sendOTP(formattedPhone);
+      // await _phoneService.sendOTP(formattedPhone);
 
       // Navegar a pantalla de verificación de email (desde ahí el usuario hará "Ya verifiqué" y pasará a /verify-phone)
       if (!mounted) return;
@@ -257,7 +257,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   Widget _buildInput(TextEditingController controller, String label,
       {bool obscure = false, TextInputType inputType = TextInputType.text}) {
-    final validator = (String? v) {
+    String? validator(String? v) {
       if (v == null || v.isEmpty) return 'Campo obligatorio';
       if (label.toLowerCase().contains('email') &&
           !RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(v)) {
@@ -267,7 +267,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         return 'Mínimo 6 caracteres';
       }
       return null;
-    };
+    }
 
     if (obscure) {
       return PasswordToggleTextField(

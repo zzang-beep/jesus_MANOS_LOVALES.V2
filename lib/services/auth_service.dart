@@ -34,7 +34,7 @@ class AuthService extends ChangeNotifier {
         name: name,
         email: email,
         phone: phone,
-        phoneVerified: false,
+        phoneVerified: true,
         verificationCode: '',
         verificationCodeExpiry: null,
         role: role,
