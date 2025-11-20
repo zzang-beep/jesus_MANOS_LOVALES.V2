@@ -175,7 +175,25 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                         ),
 
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 12),
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: TextButton(
+                      onPressed: () {
+                        Navigator.pushNamed(
+                            context, '/forgot-password-email');
+                      },
+                      child: const Text(
+                        '¿Olvidó su contraseña?',
+                        style: TextStyle(
+                          color: Colors.white70,
+                          decoration: TextDecoration.underline,
+                        ),
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 8),
 
                   // BOTÓN CREAR CUENTA
                   SizedBox(
@@ -201,19 +219,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                   ),
 
-                  const SizedBox(height: 16),
-                  TextButton(
-                    onPressed: () {
-                      Navigator.pushNamed(context, '/forgot-password-email');
-                    },
-                    child: const Text(
-                      '¿Olvidaste tu contraseña?',
-                      style: TextStyle(
-                        color: Colors.white70,
-                        decoration: TextDecoration.underline,
-                      ),
-                    ),
-                  ),
+                  const SizedBox(height: 8),
                 ],
               ),
             ),

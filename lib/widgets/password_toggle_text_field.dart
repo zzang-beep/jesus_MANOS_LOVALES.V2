@@ -48,12 +48,13 @@ class _PasswordToggleTextFieldState extends State<PasswordToggleTextField> {
         ),
         suffixIcon: IconButton(
           onPressed: () => setState(() => _obscure = !_obscure),
-          icon: Image.asset(
-            _obscure
-                ? 'assets/images/eye.png'
-                : 'assets/images/eye2.png',
-            height: 22,
-            width: 22,
+          icon: ImageIcon(
+            AssetImage(
+              _obscure
+                  ? 'assets/images/eye.png'
+                  : 'assets/images/eye2.png',
+            ),
+            size: 22,
             color: Colors.white70,
           ),
         ),
