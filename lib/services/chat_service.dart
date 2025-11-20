@@ -9,45 +9,53 @@ class ChatService {
 
   // Crear o obtener chat existente
   Future<String> getOrCreateChat(String otherUserId, String otherUserName,
-      String? otherUserPhotoUrl, String? otherUserZone) async {
+      {String? otherUserPhotoUrl, String? otherUserZone}) async {
     final currentUser = _auth.currentUser;
     if (currentUser == null) throw 'Usuario no autenticado';
 
     final users = [currentUser.uid, otherUserId]..sort();
     final chatId = 'chat_${users[0]}_${users[1]}';
 
-    final chatDoc = await _firestore.collection('chats').doc(chatId).get();
+    try {
+      final chatDoc = await _firestore.collection('chats').doc(chatId).get();
 
-    if (!chatDoc.exists) {
-      await _firestore.collection('chats').doc(chatId).set({
-        'chatId': chatId,
-        'participants': {
-          currentUser.uid: true,
-          otherUserId: true,
-        },
-        'participantInfo': {
-          currentUser.uid: {
-            'name': currentUser.displayName ?? 'Usuario',
-            'photoUrl': currentUser.photoURL ?? '',
-            'zone': '',
+      if (!chatDoc.exists) {
+        await _firestore.collection('chats').doc(chatId).set({
+          'chatId': chatId,
+          'participants': {
+            currentUser.uid: true,
+            otherUserId: true,
           },
-          otherUserId: {
-            'name': otherUserName,
-            'photoUrl': otherUserPhotoUrl ?? '',
-            'zone': otherUserZone ?? '',
+          'participantInfo': {
+            currentUser.uid: {
+              'name': currentUser.displayName ?? 'Usuario',
+              'photoUrl': currentUser.photoURL ?? '',
+              'zone': '',
+            },
+            otherUserId: {
+              'name': otherUserName,
+              'photoUrl': otherUserPhotoUrl ?? '',
+              'zone': otherUserZone ?? '',
+            },
           },
-        },
-        'lastMessage': '',
-        'lastMessageAt': FieldValue.serverTimestamp(),
-        'unreadCount': {
-          currentUser.uid: 0,
-          otherUserId: 0,
-        },
-        'createdAt': FieldValue.serverTimestamp(),
-      });
+          'lastMessage': '',
+          'lastMessageAt': FieldValue.serverTimestamp(),
+          'unreadCount': {
+            currentUser.uid: 0,
+            otherUserId: 0,
+          },
+          'createdAt': FieldValue.serverTimestamp(),
+        });
+        print('✅ Chat creado: $chatId');
+      } else {
+        print('✅ Chat existente: $chatId');
+      }
+
+      return chatId;
+    } catch (e) {
+      print('❌ Error al crear/obtener chat: $e');
+      throw 'Error al crear chat: $e';
     }
-
-    return chatId;
   }
 
   // Enviar mensaje con moderación
@@ -65,9 +73,11 @@ class ChatService {
       }
     }
 
+    final messageId =
+        'msg_${DateTime.now().millisecondsSinceEpoch}_${currentUser.uid}';
+
     final messageData = {
-      'messageId':
-          'msg_${DateTime.now().millisecondsSinceEpoch}_${currentUser.uid}',
+      'messageId': messageId,
       'senderId': currentUser.uid,
       'senderName': currentUser.displayName ?? 'Usuario',
       'text': text,
@@ -76,40 +86,51 @@ class ChatService {
         currentUser.uid: true,
       },
       'createdAt': FieldValue.serverTimestamp(),
-      'timestamp': DateTime.now(),
+      'timestamp':
+          FieldValue.serverTimestamp(), // Usar FieldValue en lugar de DateTime
       'isSystemMessage': isSystem,
     };
 
-    // Guardar mensaje
-    await _firestore
-        .collection('chats')
-        .doc(chatId)
-        .collection('messages')
-        .doc(messageData['messageId'] as String) // ✅ Conversión explícita
-        .set(messageData);
+    try {
+      // Guardar mensaje en la subcolección
+      await _firestore
+          .collection('chats')
+          .doc(chatId)
+          .collection('messages')
+          .doc(messageId)
+          .set(messageData);
 
-    // Actualizar último mensaje en el chat
-    await _firestore.collection('chats').doc(chatId).update({
-      'lastMessage': text,
-      'lastMessageAt': FieldValue.serverTimestamp(),
-      'lastMessageSender': currentUser.uid,
-    });
+      // Actualizar último mensaje en el chat
+      await _firestore.collection('chats').doc(chatId).update({
+        'lastMessage': text,
+        'lastMessageAt': FieldValue.serverTimestamp(),
+        'lastMessageSender': currentUser.uid,
+      });
 
-    // Incrementar contador de no leídos para el otro usuario
-    final chatDoc = await _firestore.collection('chats').doc(chatId).get();
-    final chatData = chatDoc.data();
+      // Incrementar contador de no leídos para otros participantes
+      final chatDoc = await _firestore.collection('chats').doc(chatId).get();
+      if (chatDoc.exists) {
+        final chatData = chatDoc.data() as Map<String, dynamic>;
+        final participants =
+            chatData['participants'] as Map<String, dynamic>? ?? {};
 
-    if (chatData != null) {
-      final participants =
-          chatData['participants'] as Map<String, dynamic>? ?? {};
-
-      for (final participantId in participants.keys) {
-        if (participantId != currentUser.uid) {
-          await _firestore.collection('chats').doc(chatId).update({
-            'unreadCount.$participantId': FieldValue.increment(1),
-          });
+        final batch = _firestore.batch();
+        for (final participantId in participants.keys) {
+          if (participantId != currentUser.uid) {
+            batch.update(_firestore.collection('chats').doc(chatId), {
+              'unreadCount.$participantId': FieldValue.increment(1),
+            });
+          }
+        }
+        if (participants.keys.length > 1) {
+          await batch.commit();
         }
       }
+
+      print('✅ Mensaje guardado correctamente: $messageId');
+    } catch (e) {
+      print('❌ Error al guardar mensaje: $e');
+      throw 'Error al enviar mensaje: $e';
     }
   }
 
@@ -120,7 +141,10 @@ class ChatService {
         .doc(chatId)
         .collection('messages')
         .orderBy('timestamp', descending: true)
-        .snapshots();
+        .snapshots()
+        .handleError((error) {
+      print('Error en stream de mensajes: $error');
+    });
   }
 
   // Obtener lista de chats del usuario

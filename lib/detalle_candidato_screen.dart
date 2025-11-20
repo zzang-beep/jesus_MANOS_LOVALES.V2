@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-
+import '../services/chat_service.dart';
 import 'models/chat_contact.dart';
 import 'services/chat_contact_service.dart';
-import 'screens/chat.dart';
+import 'screens/chat_screen.dart';
 
 class DetalleCandidatoScreen extends StatelessWidget {
   const DetalleCandidatoScreen({super.key});
@@ -125,8 +125,8 @@ class DetalleCandidatoScreen extends StatelessWidget {
                   child: ElevatedButton.icon(
                     icon: const Icon(Icons.person_add_alt),
                     label: const Text('Agregar a contactos'),
-                    onPressed: () =>
-                        _contactCandidate(context, id, nombre, profesion, ubicacion),
+                    onPressed: () => _contactCandidate(
+                        context, id, nombre, profesion, ubicacion),
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -138,8 +138,8 @@ class DetalleCandidatoScreen extends StatelessWidget {
                       foregroundColor: Colors.lightBlueAccent,
                       side: const BorderSide(color: Colors.lightBlueAccent),
                     ),
-                    onPressed: () =>
-                        _contactCandidate(context, id, nombre, profesion, ubicacion),
+                    onPressed: () => _contactCandidate(
+                        context, id, nombre, profesion, ubicacion),
                   ),
                 ),
               ],
@@ -157,19 +157,61 @@ class DetalleCandidatoScreen extends StatelessWidget {
     String bio,
     String zona,
   ) async {
-    final contact = ChatContact(
-      userId: candidateId,
-      name: name,
-      bio: bio,
-      zone: zona,
-    );
+    try {
+      // Mostrar indicador de carga
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (BuildContext context) {
+          return const Center(
+            child: CircularProgressIndicator(),
+          );
+        },
+      );
 
-    await ChatContactService().addContact(contact);
-    if (!context.mounted) return;
+      // Obtener o crear el chat usando ChatService
+      final chatService = ChatService();
+      final chatId = await chatService.getOrCreateChat(
+        candidateId,
+        name,
+        //null, // photoUrl - puedes ajustar esto si tienes la URL de la foto
+        otherUserZone: zona,
+      );
 
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (_) => ChatScreen(contact: contact)),
-    );
+      // Crear el contacto
+      final contact = ChatContact(
+        userId: candidateId,
+        name: name,
+        bio: bio,
+        zone: zona,
+        photoUrl: '', // Puedes ajustar esto si tienes la URL de la foto
+      );
+
+      // Agregar a contactos
+      await ChatContactService().addContact(contact);
+
+      if (!context.mounted) return;
+
+      // Cerrar el indicador de carga
+      Navigator.pop(context);
+
+      // Navegar pasando AMBOS parámetros requeridos
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => ChatScreen(
+            contact: contact,
+            chatId: chatId, // ✅ Aquí está la corrección - pasar chatId
+          ),
+        ),
+      );
+    } catch (e) {
+      if (context.mounted) {
+        Navigator.pop(context); // Cerrar loader si hay error
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error al iniciar chat: $e')),
+        );
+      }
+    }
   }
 }

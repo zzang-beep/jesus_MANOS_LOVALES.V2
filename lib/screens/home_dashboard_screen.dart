@@ -7,7 +7,7 @@ import '../models/user_model.dart';
 
 // 🔹 IMPORTAR PANTALLAS NECESARIAS
 import '../screens/discover_screen.dart';
-import 'chat.dart';
+import 'unified_chat_list_screen.dart';
 import 'add_job_screen.dart'; // Para hacer publicación
 import 'my_active_services_screen.dart'; // Para mis servicios
 import 'my_services_requests_screen.dart'; // Para servicios/solicitudes
@@ -97,85 +97,85 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
             child: _loading
                 ? const Center(child: CircularProgressIndicator())
                 : _currentUser == null
-                ? _buildLoggedOutState(context)
-                : SingleChildScrollView(
-              physics: const BouncingScrollPhysics(),
-              padding: const EdgeInsets.symmetric(vertical: 20),
-              child: Column(
-                children: [
-                  // FILA DE PERFIL + ICONO DE AJUSTES
-                  Padding(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 24, vertical: 10),
-                    child: Row(
-                      mainAxisAlignment:
-                      MainAxisAlignment.spaceBetween,
-                      children: [
-                        // avatar del usuario
-                        CircleAvatar(
-                          radius: 28,
-                          backgroundImage:
-                          (_currentUser?.photoUrl ?? "")
-                              .isNotEmpty
-                              ? NetworkImage(_currentUser!.photoUrl)
-                              : null,
-                          child: (_currentUser?.photoUrl ?? "").isEmpty
-                              ? const Icon(Icons.person, size: 28)
-                              : null,
+                    ? _buildLoggedOutState(context)
+                    : SingleChildScrollView(
+                        physics: const BouncingScrollPhysics(),
+                        padding: const EdgeInsets.symmetric(vertical: 20),
+                        child: Column(
+                          children: [
+                            // FILA DE PERFIL + ICONO DE AJUSTES
+                            Padding(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 24, vertical: 10),
+                              child: Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  // avatar del usuario
+                                  CircleAvatar(
+                                    radius: 28,
+                                    backgroundImage: (_currentUser?.photoUrl ??
+                                                "")
+                                            .isNotEmpty
+                                        ? NetworkImage(_currentUser!.photoUrl)
+                                        : null,
+                                    child:
+                                        (_currentUser?.photoUrl ?? "").isEmpty
+                                            ? const Icon(Icons.person, size: 28)
+                                            : null,
+                                  ),
+                                  // icono de configuración
+                                  IconButton(
+                                    icon: const Icon(Icons.settings,
+                                        color: Colors.white, size: 28),
+                                    onPressed: () {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                            builder: (_) => const Ajustes()),
+                                      );
+                                    },
+                                  ),
+                                ],
+                              ),
+                            ),
+
+                            const SizedBox(height: 14),
+                            // saludo
+                            Text(
+                              "¡Hola ${_currentUser?.name ?? "Usuario"}!",
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 32,
+                                fontWeight: FontWeight.bold,
+                                shadows: [
+                                  Shadow(
+                                    blurRadius: 4,
+                                    color: Colors.black45,
+                                    offset: Offset(2, 2),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(height: 30),
+
+                            _buildSummaryRow(),
+                            const SizedBox(height: 16),
+                            _buildQuickActions(context),
+                            const SizedBox(height: 20),
+                            _buildMapExploreCard(context),
+                            const SizedBox(height: 25),
+
+                            // Tarjeta de Próximos trabajos (dinámica)
+                            _buildAssignedJobsCard(),
+                            const SizedBox(height: 20),
+
+                            // Tarjeta de Hacer publicación con botón
+                            _buildPublicationCard(),
+                            const SizedBox(height: 40),
+                          ],
                         ),
-                        // icono de configuración
-                        IconButton(
-                          icon: const Icon(Icons.settings,
-                              color: Colors.white, size: 28),
-                          onPressed: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                  builder: (_) =>
-                                  const Ajustes()),
-                            );
-                          },
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  const SizedBox(height: 14),
-                  // saludo
-                  Text(
-                    "¡Hola ${_currentUser?.name ?? "Usuario"}!",
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 32,
-                      fontWeight: FontWeight.bold,
-                      shadows: [
-                        Shadow(
-                          blurRadius: 4,
-                          color: Colors.black45,
-                          offset: Offset(2, 2),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 30),
-
-                  _buildSummaryRow(),
-                  const SizedBox(height: 16),
-                  _buildQuickActions(context),
-                  const SizedBox(height: 20),
-                  _buildMapExploreCard(context),
-                  const SizedBox(height: 25),
-
-                  // Tarjeta de Próximos trabajos (dinámica)
-                  _buildAssignedJobsCard(),
-                  const SizedBox(height: 20),
-
-                  // Tarjeta de Hacer publicación con botón
-                  _buildPublicationCard(),
-                  const SizedBox(height: 40),
-                ],
-              ),
-            ),
+                      ),
           ),
         ],
       ),
@@ -256,8 +256,7 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
         onTap: () {
           Navigator.push(
             context,
-            MaterialPageRoute(
-                builder: (_) => const MyServicesRequestsScreen()),
+            MaterialPageRoute(builder: (_) => const MyServicesRequestsScreen()),
           );
         },
       ),
@@ -280,10 +279,10 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
         children: actions
             .map(
               (action) => Padding(
-            padding: const EdgeInsets.only(bottom: 12),
-            child: _quickActionCard(action),
-          ),
-        )
+                padding: const EdgeInsets.only(bottom: 12),
+                child: _quickActionCard(action),
+              ),
+            )
             .toList(),
       ),
     );
@@ -537,7 +536,7 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
           case 1: // Chat
             Navigator.push(
               context,
-              MaterialPageRoute(builder: (_) => const ChatContactoScreen()),
+              MaterialPageRoute(builder: (_) => const UnifiedChatListScreen()),
             );
             break;
 
@@ -620,7 +619,7 @@ Widget _buildMapExploreCard(BuildContext context) {
                   borderRadius: BorderRadius.circular(12),
                 ),
                 padding:
-                const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
+                    const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
               ),
               child: const Text(
                 'Ver mapa',
@@ -644,8 +643,7 @@ Widget _buildLoggedOutState(BuildContext context) {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(Icons.lock_outline,
-              color: Colors.white70, size: 72),
+          const Icon(Icons.lock_outline, color: Colors.white70, size: 72),
           const SizedBox(height: 20),
           const Text(
             'Inicia sesión para ver tu tablero',
@@ -662,13 +660,12 @@ Widget _buildLoggedOutState(BuildContext context) {
               Navigator.pushNamedAndRemoveUntil(
                 context,
                 '/login',
-                    (route) => false,
+                (route) => false,
               );
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.lightBlueAccent,
-              padding:
-              const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
               ),

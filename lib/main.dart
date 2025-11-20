@@ -18,7 +18,7 @@ import 'screens/add_job_screen.dart';
 import 'screens/my_active_services_screen.dart';
 import 'screens/my_services_requests_screen.dart';
 import 'screens/profile_screen.dart';
-import 'screens/chat.dart';
+import 'screens/unified_chat_list_screen.dart';
 import 'detalle_candidato_screen.dart';
 import 'detalle_puesto_trabajo_screen.dart';
 import 'screens/forgot_password_email_screen.dart';
@@ -64,7 +64,7 @@ class MyApp extends StatelessWidget {
           '/my-active-services': (context) => const MyActiveServicesScreen(),
           '/my-service-requests': (context) => const MyServicesRequestsScreen(),
           '/profile': (context) => ProfileScreen(),
-          '/chat': (context) => const ChatContactoScreen(),
+          '/chat': (context) => const UnifiedChatListScreen(),
           '/detalle_candidato': (context) => const DetalleCandidatoScreen(),
           '/detalle_puesto': (context) => const DetallePuestoScreen(),
           '/forgot-password-email': (context) =>

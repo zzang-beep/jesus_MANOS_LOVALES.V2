@@ -9,7 +9,7 @@ import 'package:geocoding/geocoding.dart';
 
 class MapaServiciosScreen extends StatefulWidget {
   final String? filterCategory;
-  
+
   const MapaServiciosScreen({super.key, this.filterCategory});
 
   @override
@@ -19,7 +19,7 @@ class MapaServiciosScreen extends StatefulWidget {
 class _MapaServiciosScreenState extends State<MapaServiciosScreen> {
   final Completer<GoogleMapController> _controller = Completer();
   final ServiceService _serviceService = ServiceService();
-  
+
   // Estado
   List<ServiceModel> _allServices = [];
   List<ServiceModel> _filteredServices = [];
@@ -29,10 +29,9 @@ class _MapaServiciosScreenState extends State<MapaServiciosScreen> {
   bool _mapAvailable = true;
   Position? _currentPosition;
   String? _errorMessage;
-  
-  // Posición por defecto (San Miguel de Tucumán)
-  static const LatLng _defaultPosition = LatLng(-26.8241, -65.2226);
-  
+  // Posición por defecto (Salta Capital)
+  static const LatLng _defaultPosition = LatLng(-24.7821, -65.4232);
+
   @override
   void initState() {
     super.initState();
@@ -77,38 +76,38 @@ class _MapaServiciosScreenState extends State<MapaServiciosScreen> {
 
   void _setDefaultPosition() {
     setState(() => _currentPosition = Position(
-      latitude: _defaultPosition.latitude,
-      longitude: _defaultPosition.longitude,
-      timestamp: DateTime.now(),
-      accuracy: 0,
-      altitude: 0,
-      heading: 0,
-      speed: 0,
-      speedAccuracy: 0,
-      altitudeAccuracy: 0,
-      headingAccuracy: 0,
-    ));
+          latitude: _defaultPosition.latitude,
+          longitude: _defaultPosition.longitude,
+          timestamp: DateTime.now(),
+          accuracy: 0,
+          altitude: 0,
+          heading: 0,
+          speed: 0,
+          speedAccuracy: 0,
+          altitudeAccuracy: 0,
+          headingAccuracy: 0,
+        ));
   }
 
   Future<void> _loadServices() async {
     setState(() => _isLoading = true);
-    
+
     try {
       List<ServiceModel> services;
-      
+
       if (widget.filterCategory != null) {
-        services = await _serviceService.getServicesByCategory(widget.filterCategory!);
+        services =
+            await _serviceService.getServicesByCategory(widget.filterCategory!);
       } else {
         services = await _serviceService.getAllServices(limit: 50);
       }
 
       _allServices = services;
       _filteredServices = services;
-      
+
       await _createMarkersFromServices();
-      
+
       setState(() => _isLoading = false);
-      
     } catch (e) {
       setState(() {
         _isLoading = false;
@@ -119,10 +118,10 @@ class _MapaServiciosScreenState extends State<MapaServiciosScreen> {
 
   Future<void> _createMarkersFromServices() async {
     final Set<Marker> markers = {};
-    
+
     // Mapa para agrupar servicios por ubicación
     final Map<String, List<ServiceModel>> servicesByLocation = {};
-    
+
     for (var service in _filteredServices) {
       final location = service.locationText.toLowerCase().trim();
       if (!servicesByLocation.containsKey(location)) {
@@ -135,24 +134,28 @@ class _MapaServiciosScreenState extends State<MapaServiciosScreen> {
     int markerIndex = 0;
     for (var entry in servicesByLocation.entries) {
       try {
-        final LatLng? coordinates = await _getCoordinatesFromLocation(entry.key);
-        
+        final LatLng? coordinates =
+            await _getCoordinatesFromLocation(entry.key);
+
         if (coordinates != null) {
           final services = entry.value;
           final marker = Marker(
             markerId: MarkerId('location_$markerIndex'),
             position: coordinates,
-            icon: _selectedService != null && 
-                  services.any((s) => s.serviceId == _selectedService!.serviceId)
+            icon: _selectedService != null &&
+                    services
+                        .any((s) => s.serviceId == _selectedService!.serviceId)
                 ? BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed)
-                : BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueBlue),
+                : BitmapDescriptor.defaultMarkerWithHue(
+                    BitmapDescriptor.hueBlue),
             infoWindow: InfoWindow(
               title: entry.key,
-              snippet: '${services.length} servicio${services.length > 1 ? 's' : ''}',
+              snippet:
+                  '${services.length} servicio${services.length > 1 ? 's' : ''}',
             ),
             onTap: () => _onMarkerTapped(services.first),
           );
-          
+
           markers.add(marker);
           markerIndex++;
         }
@@ -167,19 +170,19 @@ class _MapaServiciosScreenState extends State<MapaServiciosScreen> {
   Future<LatLng?> _getCoordinatesFromLocation(String locationText) async {
     // Cache de ubicaciones comunes en Tucumán
     final Map<String, LatLng> commonLocations = {
-      'san miguel de tucumán': LatLng(-26.8241, -65.2226),
-      'tucuman': LatLng(-26.8241, -65.2226),
-      'yerba buena': LatLng(-26.8167, -65.3000),
-      'tafi viejo': LatLng(-26.7333, -65.2667),
-      'banda del rio sali': LatLng(-26.8386, -65.1847),
-      'concepcion': LatLng(-27.3456, -65.5931),
-      'san remo': LatLng(-26.8261, -65.2246),
-      'centro': LatLng(-26.8283, -65.2176),
-      'palermo': LatLng(-26.8200, -65.2100),
+      'salta': LatLng(-24.7821, -65.4232),
+      'salta capital': LatLng(-24.7821, -65.4232),
+      'centro': LatLng(-24.7892, -65.4106), // Cerca del teleférico/centro
+      'san lorenzo': LatLng(-24.7228, -65.4921),
+      'grand bourg': LatLng(-24.7755, -65.4392),
+      'tres cerritos': LatLng(-24.7650, -65.4050),
+      'limache': LatLng(-24.8333, -65.4167),
+      'zona sur': LatLng(-24.8185, -65.4285),
+      'vaqueros': LatLng(-24.7000, -65.4000),
     };
 
     final normalizedLocation = locationText.toLowerCase().trim();
-    
+
     // Buscar en cache primero
     if (commonLocations.containsKey(normalizedLocation)) {
       return commonLocations[normalizedLocation];
@@ -187,7 +190,8 @@ class _MapaServiciosScreenState extends State<MapaServiciosScreen> {
 
     // Intentar geocodificar
     try {
-      final locations = await locationFromAddress('$locationText, Tucumán, Argentina');
+      final locations =
+          await locationFromAddress('$locationText, Salta, Argentina');
       if (locations.isNotEmpty) {
         return LatLng(locations.first.latitude, locations.first.longitude);
       }
@@ -215,7 +219,8 @@ class _MapaServiciosScreenState extends State<MapaServiciosScreen> {
         controller.animateCamera(
           CameraUpdate.newCameraPosition(
             CameraPosition(
-              target: LatLng(_currentPosition!.latitude, _currentPosition!.longitude),
+              target: LatLng(
+                  _currentPosition!.latitude, _currentPosition!.longitude),
               zoom: 14.0,
             ),
           ),
@@ -304,7 +309,8 @@ class _MapaServiciosScreenState extends State<MapaServiciosScreen> {
                 color: Colors.white.withOpacity(0.2),
                 shape: BoxShape.circle,
               ),
-              child: const Icon(Icons.arrow_back, color: Colors.white, size: 20),
+              child:
+                  const Icon(Icons.arrow_back, color: Colors.white, size: 20),
             ),
           ),
           const SizedBox(width: 16),
@@ -405,7 +411,8 @@ class _MapaServiciosScreenState extends State<MapaServiciosScreen> {
                       mini: true,
                       backgroundColor: const Color(0xFF001F3F),
                       onPressed: _centerMapOnUserLocation,
-                      child: const Icon(Icons.my_location, color: Colors.white, size: 20),
+                      child: const Icon(Icons.my_location,
+                          color: Colors.white, size: 20),
                     ),
                   ),
                 ],
@@ -527,8 +534,9 @@ class _MapaServiciosScreenState extends State<MapaServiciosScreen> {
   }
 
   Widget _buildServiceCard(ServiceModel service) {
-    final isNegotiable = service.price == null || service.priceText.toLowerCase().contains('convenir');
-    
+    final isNegotiable = service.price == null ||
+        service.priceText.toLowerCase().contains('convenir');
+
     return InkWell(
       onTap: () => _onMarkerTapped(service),
       child: Container(
@@ -592,12 +600,14 @@ class _MapaServiciosScreenState extends State<MapaServiciosScreen> {
                   const SizedBox(height: 8),
                   Row(
                     children: [
-                      const Icon(Icons.location_on, color: Colors.white70, size: 14),
+                      const Icon(Icons.location_on,
+                          color: Colors.white70, size: 14),
                       const SizedBox(width: 4),
                       Expanded(
                         child: Text(
                           service.locationText,
-                          style: const TextStyle(color: Colors.white70, fontSize: 11),
+                          style: const TextStyle(
+                              color: Colors.white70, fontSize: 11),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -605,7 +615,8 @@ class _MapaServiciosScreenState extends State<MapaServiciosScreen> {
                       if (isNegotiable) ...[
                         const SizedBox(width: 8),
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 6, vertical: 3),
                           decoration: BoxDecoration(
                             color: Colors.green.withOpacity(0.2),
                             borderRadius: BorderRadius.circular(6),
@@ -630,7 +641,8 @@ class _MapaServiciosScreenState extends State<MapaServiciosScreen> {
                       const SizedBox(width: 4),
                       Text(
                         service.category,
-                        style: const TextStyle(color: Colors.white70, fontSize: 11),
+                        style: const TextStyle(
+                            color: Colors.white70, fontSize: 11),
                       ),
                       const SizedBox(width: 12),
                       if (service.ratingCount > 0) ...[
@@ -638,7 +650,8 @@ class _MapaServiciosScreenState extends State<MapaServiciosScreen> {
                         const SizedBox(width: 4),
                         Text(
                           '${service.ratingAvg.toStringAsFixed(1)} (${service.ratingCount})',
-                          style: const TextStyle(color: Colors.white70, fontSize: 11),
+                          style: const TextStyle(
+                              color: Colors.white70, fontSize: 11),
                         ),
                       ] else
                         const Text(

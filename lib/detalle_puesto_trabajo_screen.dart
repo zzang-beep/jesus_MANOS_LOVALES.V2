@@ -5,8 +5,9 @@ import 'models/service_model.dart';
 import 'models/rating_model.dart';
 import 'services/chat_contact_service.dart';
 import 'services/rating_service.dart';
-import 'screens/chat.dart';
+import 'screens/chat_screen.dart';
 import 'widgets/rating_dialog.dart';
+import '../services/chat_service.dart';
 
 class DetallePuestoScreen extends StatefulWidget {
   const DetallePuestoScreen({super.key});
@@ -58,7 +59,9 @@ class _DetallePuestoScreenState extends State<DetallePuestoScreen> {
         (args is Map<String, dynamic> ? args['titulo'] as String? : null) ??
         _titulo;
     _descripcion = _service?.description ??
-        (args is Map<String, dynamic> ? args['descripcion'] as String? : null) ??
+        (args is Map<String, dynamic>
+            ? args['descripcion'] as String?
+            : null) ??
         _descripcion;
     _precio = _service?.formattedPrice ??
         (args is Map<String, dynamic> ? args['precio'] as String? : null) ??
@@ -66,8 +69,8 @@ class _DetallePuestoScreenState extends State<DetallePuestoScreen> {
     _ubicacion = _service?.locationText ??
         (args is Map<String, dynamic> ? args['ubicacion'] as String? : null) ??
         _ubicacion;
-    final foto =
-        _service?.photoUrl ?? (args is Map<String, dynamic> ? args['foto'] as String? : null);
+    final foto = _service?.photoUrl ??
+        (args is Map<String, dynamic> ? args['foto'] as String? : null);
     if ((foto ?? '').isNotEmpty) {
       _foto = foto!;
     }
@@ -268,8 +271,7 @@ class _DetallePuestoScreenState extends State<DetallePuestoScreen> {
               borderRadius: BorderRadius.circular(16),
             ),
             child: const Center(
-              child:
-                  CircularProgressIndicator(color: Colors.lightBlueAccent),
+              child: CircularProgressIndicator(color: Colors.lightBlueAccent),
             ),
           );
         }
@@ -322,49 +324,49 @@ class _DetallePuestoScreenState extends State<DetallePuestoScreen> {
                 )
               else
                 ...ratings.take(3).map(
-                  (rating) => Padding(
-                    padding: const EdgeInsets.only(bottom: 12),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
+                      (rating) => Padding(
+                        padding: const EdgeInsets.only(bottom: 12),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(
-                              rating.userName,
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            const SizedBox(width: 8),
                             Row(
-                              children: List.generate(
-                                5,
-                                (index) => Icon(
-                                  index < rating.score
-                                      ? Icons.star
-                                      : Icons.star_border,
-                                  color: Colors.amber,
-                                  size: 16,
+                              children: [
+                                Text(
+                                  rating.userName,
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                  ),
                                 ),
+                                const SizedBox(width: 8),
+                                Row(
+                                  children: List.generate(
+                                    5,
+                                    (index) => Icon(
+                                      index < rating.score
+                                          ? Icons.star
+                                          : Icons.star_border,
+                                      color: Colors.amber,
+                                      size: 16,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              rating.comment.isEmpty
+                                  ? 'Sin comentario'
+                                  : rating.comment,
+                              style: const TextStyle(
+                                color: Colors.white70,
+                                height: 1.3,
                               ),
                             ),
                           ],
                         ),
-                        const SizedBox(height: 4),
-                        Text(
-                          rating.comment.isEmpty
-                              ? 'Sin comentario'
-                              : rating.comment,
-                          style: const TextStyle(
-                            color: Colors.white70,
-                            height: 1.3,
-                          ),
-                        ),
-                      ],
+                      ),
                     ),
-                  ),
-                ),
             ],
           ),
         );
@@ -394,19 +396,58 @@ class _DetallePuestoScreenState extends State<DetallePuestoScreen> {
   }
 
   Future<void> _contactProvider() async {
-    final contact = ChatContact(
-      userId: _providerId,
-      name: _providerName,
-      bio: _titulo,
-      zone: _ubicacion,
-    );
+    try {
+      // Mostrar indicador de carga
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (BuildContext context) {
+          return const Center(
+            child: CircularProgressIndicator(),
+          );
+        },
+      );
 
-    await _chatContactService.addContact(contact);
-    if (!mounted) return;
+      // Obtener o crear el chat
+      final chatService = ChatService();
+      final chatId = await chatService.getOrCreateChat(
+        _providerId,
+        _providerName,
+        otherUserPhotoUrl: _service?.providerPhotoUrl, // Argumento con nombre
+        otherUserZone: _ubicacion,
+      );
 
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (_) => ChatScreen(contact: contact)),
-    );
+      final contact = ChatContact(
+        userId: _providerId,
+        name: _providerName,
+        bio: _titulo,
+        zone: _ubicacion,
+        photoUrl: _service?.providerPhotoUrl ?? '',
+      );
+
+      await _chatContactService.addContact(contact);
+
+      if (!mounted) return;
+
+      // Cerrar indicador de carga
+      Navigator.pop(context);
+
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => ChatScreen(
+            contact: contact,
+            chatId: chatId, // ✅ Agregar chatId aquí también
+          ),
+        ),
+      );
+    } catch (e) {
+      if (mounted) {
+        Navigator.pop(context); // Cerrar loader si hay error
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error al contactar: $e')),
+        );
+      }
+    }
   }
 }

@@ -52,23 +52,27 @@ class _ChatScreenState extends State<ChatScreen> {
     _messageController.clear();
     setState(() => _isSendingMessage = true);
 
+    print(
+        '📤 Intentando enviar mensaje: "$messageText" al chat: ${widget.chatId}');
+
     try {
       await _chatService.sendMessage(widget.chatId, messageText);
+      print('✅ Mensaje enviado exitosamente');
 
-      // Scroll al final
       _scrollController.animateTo(
         0,
         duration: const Duration(milliseconds: 300),
         curve: Curves.easeOut,
       );
     } catch (e) {
+      print('❌ Error enviando mensaje: $e');
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Error: $e'),
           backgroundColor: Colors.red,
         ),
       );
-      _messageController.text = messageText; // Restaurar mensaje si hay error
+      _messageController.text = messageText;
     } finally {
       setState(() => _isSendingMessage = false);
     }
