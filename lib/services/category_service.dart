@@ -2,150 +2,113 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/category_model.dart';
 
 class CategoryService {
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  CollectionReference get _categoriesCollection =>
-      _firestore.collection('categories');
+  final FirebaseFirestore _db = FirebaseFirestore.instance;
+  List<CategoryModel> _cachedCategories = [];
+  DateTime? _lastFetchTime;
+  static const Duration cacheDuration = Duration(minutes: 5);
 
+  // Obtener todas las categorías activas con caché
   Future<List<CategoryModel>> getAllCategories() async {
+    // Verificar si tenemos datos en caché y si no han expirado
+    if (_cachedCategories.isNotEmpty &&
+        _lastFetchTime != null &&
+        DateTime.now().difference(_lastFetchTime!) < cacheDuration) {
+      return _cachedCategories;
+    }
+
     try {
-      final query = await _categoriesCollection
+      final query = await _db
+          .collection('categories')
           .where('active', isEqualTo: true)
+          .orderBy('order')
           .get();
 
-      final categories =
-          query.docs.map((doc) => CategoryModel.fromFirestore(doc)).toList();
-      categories.sort((a, b) => a.order.compareTo(b.order));
-      return categories;
+      _cachedCategories = query.docs.map((doc) {
+        return CategoryModel.fromMap(doc.id, doc.data());
+      }).toList();
+
+      _lastFetchTime = DateTime.now();
+
+      return _cachedCategories;
     } catch (e) {
-      throw 'Error al obtener categorías: $e';
+      print('Error fetching categories: $e');
+      // Si hay error pero tenemos caché, devolver caché
+      if (_cachedCategories.isNotEmpty) {
+        return _cachedCategories;
+      }
+      throw Exception('No se pudieron cargar las categorías');
     }
   }
 
-  Stream<List<CategoryModel>> getCategoriesStream() {
-    return _categoriesCollection
-        .where('active', isEqualTo: true)
-        .snapshots()
-        .map(
-          (snapshot) {
-            final categories = snapshot.docs
-                .map((doc) => CategoryModel.fromFirestore(doc))
-                .toList();
-            categories.sort((a, b) => a.order.compareTo(b.order));
-            return categories;
-          },
-        );
-  }
-
+  // Obtener categoría por ID
   Future<CategoryModel?> getCategoryById(String categoryId) async {
-    try {
-      final doc = await _categoriesCollection.doc(categoryId).get();
-      if (!doc.exists) return null;
-      return CategoryModel.fromFirestore(doc);
-    } catch (e) {
-      throw 'Error al obtener categoría: $e';
-    }
+    final categories = await getAllCategories();
+    return categories.firstWhere(
+      (category) => category.categoryId == categoryId,
+      orElse: () => CategoryModel(
+        categoryId: 'unknown',
+        name: 'Desconocido',
+        icon: 'help',
+        color: '#666666',
+        order: 999,
+        active: false,
+      ),
+    );
   }
 
-  Future<void> createCategory(CategoryModel category) async {
-    try {
-      await _categoriesCollection
-          .doc(category.categoryId)
-          .set(category.toMap());
-    } catch (e) {
-      throw 'Error al crear categoría: $e';
-    }
+  // Filtrar categorías por nombre
+  Future<List<CategoryModel>> searchCategories(String query) async {
+    final categories = await getAllCategories();
+    if (query.isEmpty) return categories;
+
+    return categories.where((category) {
+      return category.name.toLowerCase().contains(query.toLowerCase());
+    }).toList();
   }
 
-  Future<void> initializeCategories() async {
-    try {
-      final existing = await _categoriesCollection.limit(1).get();
-      if (existing.docs.isNotEmpty) {
-        print('⚠️ Categorías ya existen');
-        return;
-      }
+  // Obtener categorías populares (las primeras 6 por orden)
+  Future<List<CategoryModel>> getPopularCategories() async {
+    final categories = await getAllCategories();
+    return categories.take(6).toList();
+  }
 
-      print('🚀 Inicializando categorías...');
+  // Agregar categoría personalizada
+  Future<CategoryModel> createCustomCategory(String name) async {
+    final cleanName = name.trim();
 
-      final categories = [
-        CategoryModel(
-          categoryId: 'plomeria',
-          name: 'Plomería',
-          icon: 'plumbing',
-          color: '#1976D2',
-          order: 1,
-        ),
-        CategoryModel(
-          categoryId: 'electricidad',
-          name: 'Electricidad',
-          icon: 'electrical_services',
-          color: '#F57C00',
-          order: 2,
-        ),
-        CategoryModel(
-          categoryId: 'jardineria',
-          name: 'Jardinería',
-          icon: 'yard',
-          color: '#388E3C',
-          order: 3,
-        ),
-        CategoryModel(
-          categoryId: 'limpieza',
-          name: 'Limpieza',
-          icon: 'cleaning_services',
-          color: '#00ACC1',
-          order: 4,
-        ),
-        CategoryModel(
-          categoryId: 'reparacion_pc',
-          name: 'Reparación PC',
-          icon: 'computer',
-          color: '#5E35B1',
-          order: 5,
-        ),
-        CategoryModel(
-          categoryId: 'clases_particulares',
-          name: 'Clases Particulares',
-          icon: 'school',
-          color: '#D32F2F',
-          order: 6,
-        ),
-        CategoryModel(
-          categoryId: 'pintura',
-          name: 'Pintura',
-          icon: 'format_paint',
-          color: '#7B1FA2',
-          order: 7,
-        ),
-        CategoryModel(
-          categoryId: 'carpinteria',
-          name: 'Carpintería',
-          icon: 'carpenter',
-          color: '#795548',
-          order: 8,
-        ),
-        CategoryModel(
-          categoryId: 'gasista',
-          name: 'Gasista',
-          icon: 'local_fire_department',
-          color: '#E64A19',
-          order: 9,
-        ),
-        CategoryModel(
-          categoryId: 'otros',
-          name: 'Otros',
-          icon: 'more_horiz',
-          color: '#616161',
-          order: 10,
-        ),
-      ];
-
-      for (var category in categories) {
-        await createCategory(category);
-      }
-
-      print('✅ 10 categorías creadas');
-    } catch (e) {
-      throw 'Error al inicializar categorías: $e';
+    if (cleanName.isEmpty) {
+      throw Exception("El nombre de la categoría no puede estar vacío.");
     }
+
+    // Crear documento en Firestore para categoría personalizada
+    final docRef = await _db.collection('categories_custom').add({
+      'name': cleanName,
+      'icon': 'edit',
+      'color': '#555555',
+      'order': 999,
+      'active': true,
+      'isCustom': true,
+      'createdAt': FieldValue.serverTimestamp(),
+    });
+
+    // Invalidar caché
+    _cachedCategories = [];
+    _lastFetchTime = null;
+
+    return CategoryModel(
+      categoryId: docRef.id,
+      name: cleanName,
+      icon: 'edit',
+      color: '#555555',
+      order: 999,
+      active: true,
+    );
+  }
+
+  // Forzar refresco de categorías
+  Future<void> refreshCategories() async {
+    _cachedCategories = [];
+    _lastFetchTime = null;
+    await getAllCategories();
   }
 }

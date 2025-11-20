@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../services/auth_service.dart';
-import '../services/payment_service.dart';
+import '/services/auth_service.dart';
+import '/services/payment_service.dart';
 
 class WorkerPendingPayments extends StatelessWidget {
   const WorkerPendingPayments({super.key});

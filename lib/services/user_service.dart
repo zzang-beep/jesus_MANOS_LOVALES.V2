@@ -6,7 +6,7 @@ class UserService {
   final CollectionReference _usersCollection =
       FirebaseFirestore.instance.collection('users');
 
-  // ============== OBTENER USUARIO POR ID ==============
+  // ================== OBTENER USUARIO POR ID ==================
   Future<UserModel?> getUserById(String userId) async {
     try {
       final doc = await _usersCollection.doc(userId).get();
@@ -19,7 +19,7 @@ class UserService {
     }
   }
 
-  // ============== OBTENER USUARIO (STREAM) ==============
+  // ================== OBTENER USUARIO (STREAM) ==================
   Stream<UserModel?> getUserStream(String userId) {
     return _usersCollection.doc(userId).snapshots().map((doc) {
       if (!doc.exists) return null;
@@ -27,7 +27,7 @@ class UserService {
     });
   }
 
-  // ============== ACTUALIZAR PERFIL ==============
+  // ================== ACTUALIZAR PERFIL (EDITABLES) ==================
   Future<void> updateProfile({
     required String userId,
     String? name,
@@ -35,6 +35,8 @@ class UserService {
     String? bio,
     String? role,
     String? photoUrl,
+    String? direccion,
+    String? zona, // ⬅️ NUEVO CAMPO
   }) async {
     try {
       final Map<String, dynamic> updates = {};
@@ -44,6 +46,8 @@ class UserService {
       if (bio != null) updates['bio'] = bio;
       if (role != null) updates['role'] = role;
       if (photoUrl != null) updates['photoUrl'] = photoUrl;
+      if (direccion != null) updates['direccion'] = direccion;
+      if (zona != null) updates['zona'] = zona; // ⬅️ NUEVO
 
       if (updates.isEmpty) return;
 
@@ -53,17 +57,27 @@ class UserService {
     }
   }
 
-  // ============== ACTUALIZAR RATING DEL USUARIO ==============
+  // ================== MÉTODO ESPECÍFICO PARA DIRECCIÓN ==================
+  Future<void> updateDireccion(String userId, String direccion) async {
+    try {
+      await _usersCollection.doc(userId).update({
+        'direccion': direccion,
+      });
+    } catch (e) {
+      throw 'Error al actualizar dirección: $e';
+    }
+  }
+
+  // ================== ACTUALIZAR RATING ==================
   Future<void> updateUserRating(String userId) async {
     try {
-      // 1. Obtener todos los ratings del usuario como proveedor
+      // 1. Obtener ratings del usuario como proveedor
       final ratingsQuery = await _firestore
           .collection('ratings')
           .where('providerId', isEqualTo: userId)
           .get();
 
       if (ratingsQuery.docs.isEmpty) {
-        // Si no hay ratings, poner en 0
         await _usersCollection.doc(userId).update({
           'ratingAvg': 0.0,
           'ratingCount': 0,
@@ -82,7 +96,7 @@ class UserService {
       final avg = totalScore / ratingsQuery.docs.length;
       final count = ratingsQuery.docs.length;
 
-      // 3. Actualizar usuario
+      // 3. Guardar
       await _usersCollection.doc(userId).update({
         'ratingAvg': double.parse(avg.toStringAsFixed(1)),
         'ratingCount': count,
@@ -92,7 +106,7 @@ class UserService {
     }
   }
 
-  // ============== BUSCAR USUARIOS POR ROL ==============
+  // ================== BUSCAR USUARIOS POR ROL ==================
   Future<List<UserModel>> getUsersByRole(String role) async {
     try {
       final query = await _usersCollection
@@ -107,7 +121,7 @@ class UserService {
     }
   }
 
-  // ============== OBTENER PROVEEDORES DESTACADOS ==============
+  // ================== OBTENER PROVEEDORES DESTACADOS ==================
   Future<List<UserModel>> getTopProviders({int limit = 10}) async {
     try {
       final query = await _usersCollection
@@ -123,7 +137,7 @@ class UserService {
     }
   }
 
-  // ============== DESACTIVAR USUARIO ==============
+  // ================== DESACTIVAR USUARIO ==================
   Future<void> deactivateUser(String userId) async {
     try {
       await _usersCollection.doc(userId).update({'active': false});
@@ -132,7 +146,7 @@ class UserService {
     }
   }
 
-  // ============== REACTIVAR USUARIO ==============
+  // ================== REACTIVAR USUARIO ==================
   Future<void> reactivateUser(String userId) async {
     try {
       await _usersCollection.doc(userId).update({'active': true});
@@ -141,7 +155,7 @@ class UserService {
     }
   }
 
-  // ============== ELIMINAR USUARIO COMPLETAMENTE ==============
+  // ================== ELIMINAR USUARIO COMPLETAMENTE ==================
   Future<void> deleteUser(String userId) async {
     try {
       await _usersCollection.doc(userId).delete();

@@ -4,7 +4,8 @@ import '../models/user_model.dart';
 import '../services/user_service.dart';
 import 'edit_profile_screen.dart';
 import '../screens/home_dashboard_screen.dart';
-import '../screens/chat.dart' hide UserModel, HomeDashboardScreen;
+import '../screens/unified_chat_list_screen.dart'
+    hide UserModel, HomeDashboardScreen;
 import '../screens/discover_screen.dart';
 
 class ProfileScreen extends StatelessWidget {
@@ -118,8 +119,7 @@ class ProfileScreen extends StatelessWidget {
                                 radius: 60,
                                 backgroundImage: user.photoUrl.isNotEmpty
                                     ? NetworkImage(user.photoUrl)
-                                    : const AssetImage(
-                                            'assets/images/logo.png')
+                                    : const AssetImage('assets/images/logo.png')
                                         as ImageProvider,
                               ),
                             ),
@@ -324,7 +324,7 @@ class _BottomNavBar extends StatelessWidget {
   Widget build(BuildContext context) {
     final screens = [
       const HomeDashboardScreen(), // Índice 0: Inicio
-      const ChatContactoScreen(), // Índice 1: Chat
+      const UnifiedChatListScreen(), // Índice 1: Chat
       const DiscoverScreen(), // Índice 2: Buscar
       ProfileScreen(), // Índice 3: Perfil
     ];

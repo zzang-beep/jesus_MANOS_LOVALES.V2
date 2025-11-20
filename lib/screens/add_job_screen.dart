@@ -6,9 +6,10 @@ import '../services/auth_service.dart';
 import '../services/user_service.dart';
 import '../models/service_model.dart';
 import '../models/category_model.dart';
+import '../services/content_validation_service.dart';
 
 class AddJobScreen extends StatefulWidget {
-  const AddJobScreen({super.key});
+  const AddJobScreen({Key? key}) : super(key: key);
 
   @override
   State<AddJobScreen> createState() => _AddJobScreenState();
@@ -24,6 +25,7 @@ class _AddJobScreenState extends State<AddJobScreen> {
   final _serviceService = ServiceService();
   final _categoryService = CategoryService();
   final _userService = UserService();
+  final _validationService = ContentValidationService();
 
   List<CategoryModel> _categories = [];
   final List<CategoryModel> _fallbackCategories = [
@@ -32,34 +34,45 @@ class _AddJobScreenState extends State<AddJobScreen> {
       name: 'Plomería',
       icon: 'plumbing',
       color: '#1976D2',
+      order: 1,
+      active: true,
     ),
     CategoryModel(
       categoryId: 'electricidad',
       name: 'Electricidad',
       icon: 'electrical_services',
       color: '#F57C00',
+      order: 2,
+      active: true,
     ),
     CategoryModel(
       categoryId: 'limpieza',
       name: 'Limpieza',
       icon: 'cleaning_services',
       color: '#00ACC1',
+      order: 3,
+      active: true,
     ),
     CategoryModel(
       categoryId: 'jardineria',
       name: 'Jardinería',
       icon: 'yard',
       color: '#388E3C',
+      order: 4,
+      active: true,
     ),
     CategoryModel(
-      categoryId: 'clases',
+      categoryId: 'clases_particulares',
       name: 'Clases y educación',
       icon: 'school',
       color: '#7B1FA2',
+      order: 5,
+      active: true,
     ),
   ];
   String? _selectedCategory;
   bool _isLoading = false;
+  bool _isValidating = false;
 
   @override
   void initState() {
@@ -70,17 +83,34 @@ class _AddJobScreenState extends State<AddJobScreen> {
   Future<void> _loadCategories() async {
     try {
       final categories = await _categoryService.getAllCategories();
+
       if (!mounted) return;
-      final Map<String, CategoryModel> merged = {
-        for (final category in _fallbackCategories) category.categoryId: category
-      };
+
+      // Combinar categorías de Firebase con las de respaldo
+      final Map<String, CategoryModel> merged = {};
+
+      // Primero agregar las categorías de respaldo
+      for (final category in _fallbackCategories) {
+        merged[category.categoryId] = category;
+      }
+
+      // Luego agregar/sobrescribir con las categorías de Firebase
       for (final category in categories) {
         merged[category.categoryId] = category;
       }
+
       setState(() {
         _categories = merged.values.toList();
+        // Ordenar por order si está disponible, sino por nombre
+        _categories.sort((a, b) {
+          if (a.order != b.order) {
+            return a.order.compareTo(b.order);
+          }
+          return a.name.compareTo(b.name);
+        });
       });
-    } catch (_) {
+    } catch (e) {
+      print('Error loading categories: $e');
       if (!mounted) return;
       setState(() => _categories = List.from(_fallbackCategories));
     }
@@ -93,6 +123,35 @@ class _AddJobScreenState extends State<AddJobScreen> {
         const SnackBar(content: Text('Selecciona un tipo de empleo')),
       );
       return;
+    }
+
+    setState(() => _isValidating = true);
+
+    try {
+      final validationResult =
+          await ContentValidationService.validateJobPosting(
+        title: _titleController.text.trim(),
+        description: _descriptionController.text.trim(),
+        category: _selectedCategory!,
+      );
+
+      if (!validationResult.isValid) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('❌ ${validationResult.issues.first.message}'),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 5),
+          ),
+        );
+        return;
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error en validación: $e')),
+      );
+      return;
+    } finally {
+      setState(() => _isValidating = false);
     }
 
     setState(() => _isLoading = true);
@@ -127,7 +186,6 @@ class _AddJobScreenState extends State<AddJobScreen> {
 
       await _serviceService.createService(service: service, provider: provider);
 
-      // Mostrar modal de éxito
       _showSuccessDialog();
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -159,8 +217,8 @@ class _AddJobScreenState extends State<AddJobScreen> {
                   IconButton(
                     icon: const Icon(Icons.close, color: Colors.white),
                     onPressed: () {
-                      Navigator.pop(context); // Cerrar dialog
-                      Navigator.pop(context); // Volver a home
+                      Navigator.pop(context);
+                      Navigator.pop(context);
                     },
                   ),
                 ],
@@ -211,7 +269,6 @@ class _AddJobScreenState extends State<AddJobScreen> {
         child: SafeArea(
           child: Column(
             children: [
-              // Header
               Padding(
                 padding: const EdgeInsets.all(20),
                 child: Row(
@@ -232,8 +289,6 @@ class _AddJobScreenState extends State<AddJobScreen> {
                   ],
                 ),
               ),
-
-              // Form
               Expanded(
                 child: SingleChildScrollView(
                   padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -242,7 +297,6 @@ class _AddJobScreenState extends State<AddJobScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        // Título de Trabajo
                         _buildTextField(
                           controller: _titleController,
                           label: 'Título de Trabajo:',
@@ -253,10 +307,7 @@ class _AddJobScreenState extends State<AddJobScreen> {
                             return null;
                           },
                         ),
-
                         const SizedBox(height: 20),
-
-                        // Tipo de empleo
                         const Text(
                           'Tipo de empleo',
                           style: TextStyle(
@@ -300,10 +351,7 @@ class _AddJobScreenState extends State<AddJobScreen> {
                             ),
                           ),
                         ),
-
                         const SizedBox(height: 20),
-
-                        // Ubicación
                         _buildTextField(
                           controller: _locationController,
                           label: 'Ubicación:',
@@ -314,20 +362,14 @@ class _AddJobScreenState extends State<AddJobScreen> {
                             return null;
                           },
                         ),
-
                         const SizedBox(height: 20),
-
-                        // Pago
                         _buildTextField(
                           controller: _paymentController,
                           label: 'Pago:',
                           keyboardType: TextInputType.number,
                           required: false,
                         ),
-
                         const SizedBox(height: 20),
-
-                        // Descripción
                         const Text(
                           'Descripción:',
                           style: TextStyle(
@@ -365,28 +407,60 @@ class _AddJobScreenState extends State<AddJobScreen> {
                             },
                           ),
                         ),
-
                         const SizedBox(height: 40),
-
-                        // Botón Publicar
-                        ElevatedButton(
-                          onPressed: _isLoading ? null : _publishJob,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.blue,
-                            padding: const EdgeInsets.symmetric(vertical: 16),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                          ),
-                          child: _isLoading
-                              ? const CircularProgressIndicator(
-                                  color: Colors.white)
-                              : const Text(
-                                  'Publicar',
-                                  style: TextStyle(fontSize: 16),
+                        _isValidating
+                            ? ElevatedButton(
+                                onPressed: null,
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.orange,
+                                  padding:
+                                      const EdgeInsets.symmetric(vertical: 16),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
                                 ),
-                        ),
-
+                                child: const Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    SizedBox(
+                                      width: 20,
+                                      height: 20,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                    SizedBox(width: 12),
+                                    Text(
+                                      'Validando contenido...',
+                                      style: TextStyle(
+                                          fontSize: 16, color: Colors.white),
+                                    ),
+                                  ],
+                                ),
+                              )
+                            : ElevatedButton(
+                                onPressed: _isLoading ? null : _publishJob,
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.blue,
+                                  padding:
+                                      const EdgeInsets.symmetric(vertical: 16),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                ),
+                                child: _isLoading
+                                    ? const SizedBox(
+                                        width: 20,
+                                        height: 20,
+                                        child: CircularProgressIndicator(
+                                            color: Colors.white),
+                                      )
+                                    : const Text(
+                                        'Publicar',
+                                        style: TextStyle(fontSize: 16),
+                                      ),
+                              ),
                         const SizedBox(height: 40),
                       ],
                     ),

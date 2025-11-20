@@ -19,7 +19,6 @@ import 'screens/my_active_services_screen.dart';
 import 'screens/my_services_requests_screen.dart';
 import 'screens/profile_screen.dart';
 import 'screens/chat.dart';
-import 'screens/admin_screen.dart';
 import 'detalle_candidato_screen.dart';
 import 'detalle_puesto_trabajo_screen.dart';
 import 'screens/forgot_password_email_screen.dart';
@@ -63,11 +62,9 @@ class MyApp extends StatelessWidget {
           '/discover': (context) => const DiscoverScreen(),
           '/add-job': (context) => const AddJobScreen(),
           '/my-active-services': (context) => const MyActiveServicesScreen(),
-          '/my-service-requests': (context) =>
-              const MyServicesRequestsScreen(),
+          '/my-service-requests': (context) => const MyServicesRequestsScreen(),
           '/profile': (context) => ProfileScreen(),
           '/chat': (context) => const ChatContactoScreen(),
-          '/admin': (context) => const AdminScreen(),
           '/detalle_candidato': (context) => const DetalleCandidatoScreen(),
           '/detalle_puesto': (context) => const DetallePuestoScreen(),
           '/forgot-password-email': (context) =>

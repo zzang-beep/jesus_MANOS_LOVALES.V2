@@ -5,9 +5,9 @@ class UserModel {
   final String name;
   final String email;
   final String phone;
-  final bool phoneVerified; // ← NUEVO
-  final String verificationCode; // ← NUEVO
-  final DateTime? verificationCodeExpiry; // ← NUEVO
+  final bool phoneVerified;
+  final String verificationCode;
+  final DateTime? verificationCodeExpiry;
   final String photoUrl;
   final String bio;
   final String role;
@@ -15,15 +15,17 @@ class UserModel {
   final int ratingCount;
   final DateTime createdAt;
   final bool active;
+  final String direccion;
+  final String zona; // ⬅️ NUEVO CAMPO
 
   UserModel({
     required this.userId,
     required this.name,
     required this.email,
     required this.phone,
-    this.phoneVerified = false, // ← NUEVO
-    this.verificationCode = '', // ← NUEVO
-    this.verificationCodeExpiry, // ← NUEVO
+    this.phoneVerified = false,
+    this.verificationCode = '',
+    this.verificationCodeExpiry,
     this.photoUrl = '',
     this.bio = '',
     this.role = 'client',
@@ -31,15 +33,16 @@ class UserModel {
     this.ratingCount = 0,
     required this.createdAt,
     this.active = true,
+    this.direccion = '',
+    this.zona = '', // ⬅️ NUEVO VALOR POR DEFECTO
   });
 
-  // ============== NUEVO: Helper para verificar si puede ofrecer servicios ==============
+  // ============== Helper: puede ofrecer servicios ==============
   bool get canProvideServices {
-    // Solo proveedores verificados pueden publicar servicios
     return (role == 'provider' || role == 'both') && phoneVerified;
   }
 
-  // ============== NUEVO: Helper para verificar si el código es válido ==============
+  // ============== Helper: validar código ==============
   bool isCodeValid(String code) {
     if (verificationCode.isEmpty || verificationCodeExpiry == null) {
       return false;
@@ -49,13 +52,13 @@ class UserModel {
         DateTime.now().isBefore(verificationCodeExpiry!);
   }
 
-  // ============== NUEVO: Helper para verificar si el código expiró ==============
+  // ============== Helper: expiración del código ==============
   bool get isCodeExpired {
     if (verificationCodeExpiry == null) return true;
     return DateTime.now().isAfter(verificationCodeExpiry!);
   }
 
-  // Convertir desde Firestore
+  // ================== Convertir desde Firestore ==================
   factory UserModel.fromFirestore(DocumentSnapshot doc) {
     final data = doc.data() as Map<String, dynamic>;
 
@@ -64,11 +67,9 @@ class UserModel {
       name: data['name'] ?? '',
       email: data['email'] ?? '',
       phone: data['phone'] ?? '',
-      phoneVerified: data['phoneVerified'] ?? false, // ← NUEVO
-      verificationCode: data['verificationCode'] ?? '', // ← NUEVO
-      verificationCodeExpiry:
-          data['verificationCodeExpiry'] !=
-              null // ← NUEVO
+      phoneVerified: data['phoneVerified'] ?? false,
+      verificationCode: data['verificationCode'] ?? '',
+      verificationCodeExpiry: data['verificationCodeExpiry'] != null
           ? (data['verificationCodeExpiry'] as Timestamp).toDate()
           : null,
       photoUrl: data['photoUrl'] ?? '',
@@ -78,20 +79,20 @@ class UserModel {
       ratingCount: data['ratingCount'] ?? 0,
       createdAt: (data['createdAt'] as Timestamp).toDate(),
       active: data['active'] ?? true,
+      direccion: data['direccion'] ?? '',
+      zona: data['zona'] ?? '', // ⬅️ NUEVO CAMPO
     );
   }
 
-  // Convertir a Map para Firestore
+  // ================== Convertir a Map ==================
   Map<String, dynamic> toMap() {
     return {
       'name': name,
       'email': email,
       'phone': phone,
-      'phoneVerified': phoneVerified, // ← NUEVO
-      'verificationCode': verificationCode, // ← NUEVO
-      'verificationCodeExpiry':
-          verificationCodeExpiry !=
-              null // ← NUEVO
+      'phoneVerified': phoneVerified,
+      'verificationCode': verificationCode,
+      'verificationCodeExpiry': verificationCodeExpiry != null
           ? Timestamp.fromDate(verificationCodeExpiry!)
           : null,
       'photoUrl': photoUrl,
@@ -101,17 +102,19 @@ class UserModel {
       'ratingCount': ratingCount,
       'createdAt': Timestamp.fromDate(createdAt),
       'active': active,
+      'direccion': direccion,
+      'zona': zona, // ⬅️ NUEVO CAMPO
     };
   }
 
-  // CopyWith para actualizaciones
+  // ================== CopyWith ==================
   UserModel copyWith({
     String? name,
     String? email,
     String? phone,
-    bool? phoneVerified, // ← NUEVO
-    String? verificationCode, // ← NUEVO
-    DateTime? verificationCodeExpiry, // ← NUEVO
+    bool? phoneVerified,
+    String? verificationCode,
+    DateTime? verificationCodeExpiry,
     String? photoUrl,
     String? bio,
     String? role,
@@ -119,16 +122,17 @@ class UserModel {
     int? ratingCount,
     DateTime? createdAt,
     bool? active,
+    String? direccion,
+    String? zona, // ⬅️ NUEVO CAMPO
   }) {
     return UserModel(
       userId: userId,
       name: name ?? this.name,
       email: email ?? this.email,
       phone: phone ?? this.phone,
-      phoneVerified: phoneVerified ?? this.phoneVerified, // ← NUEVO
-      verificationCode: verificationCode ?? this.verificationCode, // ← NUEVO
-      verificationCodeExpiry:
-          verificationCodeExpiry ?? this.verificationCodeExpiry, // ← NUEVO
+      phoneVerified: phoneVerified ?? this.phoneVerified,
+      verificationCode: verificationCode ?? this.verificationCode,
+      verificationCodeExpiry: verificationCodeExpiry ?? this.verificationCodeExpiry,
       photoUrl: photoUrl ?? this.photoUrl,
       bio: bio ?? this.bio,
       role: role ?? this.role,
@@ -136,6 +140,8 @@ class UserModel {
       ratingCount: ratingCount ?? this.ratingCount,
       createdAt: createdAt ?? this.createdAt,
       active: active ?? this.active,
+      direccion: direccion ?? this.direccion,
+      zona: zona ?? this.zona, // ⬅️ NUEVO CAMPO
     );
   }
 }

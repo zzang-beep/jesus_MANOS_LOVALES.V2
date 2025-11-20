@@ -5,15 +5,15 @@ import '../models/user_model.dart';
 class ServiceService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final CollectionReference _servicesCollection =
-      FirebaseFirestore.instance.collection('services');
+  FirebaseFirestore.instance.collection('services');
 
+  // CREAR SERVICIO
   Future<String> createService({
     required ServiceModel service,
     required UserModel provider,
   }) async {
     try {
       final serviceData = service.copyWith(updatedAt: DateTime.now());
-
       final docRef = await _servicesCollection.add(serviceData.toMap());
       return docRef.id;
     } catch (e) {
@@ -21,6 +21,7 @@ class ServiceService {
     }
   }
 
+  // OBTENER SERVICIO POR ID
   Future<ServiceModel?> getServiceById(String serviceId) async {
     try {
       final doc = await _servicesCollection.doc(serviceId).get();
@@ -31,6 +32,7 @@ class ServiceService {
     }
   }
 
+  // OBTENER TODOS LOS SERVICIOS ACTIVOS
   Future<List<ServiceModel>> getAllServices({int limit = 20}) async {
     try {
       final query = await _servicesCollection
@@ -39,7 +41,7 @@ class ServiceService {
           .get();
 
       final services =
-          query.docs.map((doc) => ServiceModel.fromFirestore(doc)).toList();
+      query.docs.map((doc) => ServiceModel.fromFirestore(doc)).toList();
       services.sort((a, b) => b.createdAt.compareTo(a.createdAt));
       return services;
     } catch (e) {
@@ -47,10 +49,16 @@ class ServiceService {
     }
   }
 
+  // OBTENER SERVICIOS PUBLICADOS (igual que getAllServices)
+  Future<List<ServiceModel>> getPublishedServices({int limit = 20}) async {
+    return getAllServices(limit: limit);
+  }
+
+  // OBTENER SERVICIOS POR CATEGORÍA
   Future<List<ServiceModel>> getServicesByCategory(
-    String category, {
-    int limit = 20,
-  }) async {
+      String category, {
+        int limit = 20,
+      }) async {
     try {
       final query = await _servicesCollection
           .where('category', isEqualTo: category)
@@ -59,7 +67,7 @@ class ServiceService {
           .get();
 
       final services =
-          query.docs.map((doc) => ServiceModel.fromFirestore(doc)).toList();
+      query.docs.map((doc) => ServiceModel.fromFirestore(doc)).toList();
       services.sort((a, b) => b.createdAt.compareTo(a.createdAt));
       return services;
     } catch (e) {
@@ -67,6 +75,7 @@ class ServiceService {
     }
   }
 
+  // OBTENER SERVICIOS DE UN PROVEEDOR
   Future<List<ServiceModel>> getProviderServices(String providerId) async {
     try {
       final result = await _servicesCollection
@@ -75,7 +84,7 @@ class ServiceService {
           .get();
 
       final services =
-          result.docs.map((doc) => ServiceModel.fromFirestore(doc)).toList();
+      result.docs.map((doc) => ServiceModel.fromFirestore(doc)).toList();
       services.sort((a, b) => b.createdAt.compareTo(a.createdAt));
       return services;
     } catch (e) {
@@ -83,6 +92,25 @@ class ServiceService {
     }
   }
 
+  // OBTENER SERVICIOS COMPLETADOS (trabajos realizados)
+  Future<List<ServiceModel>> getCompletedServices({int limit = 20}) async {
+    try {
+      final query = await _servicesCollection
+          .where('active', isEqualTo: false)
+          .where('status', isEqualTo: 'completed')
+          .limit(limit)
+          .get();
+
+      final services =
+      query.docs.map((doc) => ServiceModel.fromFirestore(doc)).toList();
+      services.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+      return services;
+    } catch (e) {
+      throw 'Error al obtener servicios completados: $e';
+    }
+  }
+
+  // ACTUALIZAR RATING
   Future<void> updateServiceRating(String serviceId) async {
     try {
       final ratingsQuery = await _firestore
@@ -118,6 +146,7 @@ class ServiceService {
     }
   }
 
+  // ELIMINAR SERVICIO (marcar como inactivo)
   Future<void> deleteService(String serviceId) async {
     try {
       await _servicesCollection.doc(serviceId).update({
@@ -129,7 +158,7 @@ class ServiceService {
     }
   }
 
-  // FUNCIÓN FALTANTE - AGREGAR A service_service.dart
+  // ACTUALIZAR ESTADO DE SERVICIO
   Future<void> updateServiceStatus(String serviceId, String status) async {
     try {
       await _servicesCollection.doc(serviceId).update({
@@ -141,6 +170,7 @@ class ServiceService {
     }
   }
 
+  // COMPLETAR SERVICIO
   Future<void> completeService(String serviceId) async {
     try {
       await _servicesCollection.doc(serviceId).update({

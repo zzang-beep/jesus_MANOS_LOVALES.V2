@@ -6,7 +6,7 @@ import '../models/category_model.dart';
 import '../widgets/service_card_discover.dart';
 import '../widgets/filter_bottom_sheet.dart';
 import 'widgets/discover_profile_card.dart';
-import '../screens/chat.dart' hide HomeDashboardScreen;
+import '../screens/unified_chat_list_screen.dart' hide HomeDashboardScreen;
 import '../screens/profile_screen.dart';
 import '../screens/home_dashboard_screen.dart';
 
@@ -52,10 +52,12 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
       "id": "cand_juan",
       "nombre": "Juan Rodríguez",
       "profesion": "Plomero Profesional",
-      "experiencia": "5 años de experiencia resolviendo urgencias domiciliarias.",
+      "experiencia":
+          "5 años de experiencia resolviendo urgencias domiciliarias.",
       "ubicacion": "Zona Oeste",
       "zona": "Zona Oeste",
-      "descripcion": "Especialista en instalaciones y reparaciones sin romper paredes.",
+      "descripcion":
+          "Especialista en instalaciones y reparaciones sin romper paredes.",
       "foto": "assets/images/inicio3.png",
     },
     {
@@ -94,16 +96,22 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
       final categories = await _categoryService.getAllCategories();
       final services = await _serviceService.getAllServices(limit: 50);
 
+      if (!mounted) return;
+
       setState(() {
         _categories = categories;
         _services = _filterServices(services);
       });
     } catch (e) {
+      print('Error loading discover data: $e');
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error: $e')),
       );
     } finally {
-      setState(() => _isLoading = false);
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
   }
 
@@ -207,7 +215,8 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
                 color: const Color(0xFF001F3F),
                 borderRadius:
                     const BorderRadius.vertical(top: Radius.circular(20)),
-                border: Border.all(color: Colors.blue.withOpacity(0.3), width: 1),
+                border:
+                    Border.all(color: Colors.blue.withOpacity(0.3), width: 1),
               ),
               padding: const EdgeInsets.all(24),
               child: Column(
@@ -391,8 +400,9 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
 
               // Grid de servicios
               Expanded(
-                child:
-                    _showingCandidates ? _buildCandidatesList() : _buildServiceList(),
+                child: _showingCandidates
+                    ? _buildCandidatesList()
+                    : _buildServiceList(),
               ),
             ],
           ),
@@ -462,8 +472,7 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(Icons.people_outline,
-                  color: Colors.white30, size: 72),
+              const Icon(Icons.people_outline, color: Colors.white30, size: 72),
               const SizedBox(height: 12),
               const Text(
                 'Aún no hay candidatos destacados para tu zona.',
@@ -475,14 +484,15 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
               ),
               const SizedBox(height: 6),
               const Text(
-                'Publicá un servicio o amplía tus filtros para encontrar nuevos perfiles.',
+                'Publicá un servicio o ampliá tus filtros para encontrar nuevos perfiles.',
                 textAlign: TextAlign.center,
                 style: TextStyle(color: Colors.white54),
               ),
               const SizedBox(height: 16),
               OutlinedButton.icon(
                 onPressed: _showLocationFilter,
-                icon: const Icon(Icons.location_on, color: Colors.lightBlueAccent),
+                icon: const Icon(Icons.location_on,
+                    color: Colors.lightBlueAccent),
                 label: const Text(
                   'Elegir otra zona',
                   style: TextStyle(color: Colors.lightBlueAccent),
@@ -610,7 +620,7 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
           case 1: // Chat
             Navigator.push(
               context,
-              MaterialPageRoute(builder: (_) => const ChatContactoScreen()),
+              MaterialPageRoute(builder: (_) => const UnifiedChatListScreen()),
             );
 
             break;

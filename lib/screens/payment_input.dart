@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import '../services/payment_service.dart';
-import '../models/payment_model.dart';
-import '../services/auth_service.dart';
+import '/services/payment_service.dart';
+import '/models/payment_model.dart';
+import '/services/auth_service.dart';
+
+
 import 'waiting_for_confirmation.dart';
 
 class PaymentInput extends StatefulWidget {

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:manos_locales/screens/CerrarSesionDummy.dart';
 import 'package:manos_locales/screens/profile_screen.dart';
 import '../services/user_service.dart';
 import '../models/user_model.dart';
@@ -12,6 +13,7 @@ import 'my_active_services_screen.dart'; // Para mis servicios
 import 'my_services_requests_screen.dart'; // Para servicios/solicitudes
 import '../services/service_service.dart'; // Para cargar trabajos
 import '../models/service_model.dart'; // Para el modelo de servicios
+import 'ajustes.dart'; // Importamos la pantalla de ajustes
 
 class HomeDashboardScreen extends StatefulWidget {
   const HomeDashboardScreen({super.key});
@@ -95,58 +97,85 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
             child: _loading
                 ? const Center(child: CircularProgressIndicator())
                 : _currentUser == null
-                    ? _buildLoggedOutState(context)
-                    : SingleChildScrollView(
-                    physics: const BouncingScrollPhysics(),
-                    padding: const EdgeInsets.symmetric(vertical: 20),
-                    child: Column(
+                ? _buildLoggedOutState(context)
+                : SingleChildScrollView(
+              physics: const BouncingScrollPhysics(),
+              padding: const EdgeInsets.symmetric(vertical: 20),
+              child: Column(
+                children: [
+                  // FILA DE PERFIL + ICONO DE AJUSTES
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 24, vertical: 10),
+                    child: Row(
+                      mainAxisAlignment:
+                      MainAxisAlignment.spaceBetween,
                       children: [
-                        // Perfil
+                        // avatar del usuario
                         CircleAvatar(
-                          radius: 55,
+                          radius: 28,
                           backgroundImage:
-                              (_currentUser?.photoUrl ?? "").isNotEmpty
-                                  ? NetworkImage(_currentUser!.photoUrl)
-                                  : null,
+                          (_currentUser?.photoUrl ?? "")
+                              .isNotEmpty
+                              ? NetworkImage(_currentUser!.photoUrl)
+                              : null,
                           child: (_currentUser?.photoUrl ?? "").isEmpty
-                              ? const Icon(Icons.person, size: 55)
+                              ? const Icon(Icons.person, size: 28)
                               : null,
                         ),
-                        const SizedBox(height: 14),
-                        Text(
-                          "¡Hola ${_currentUser?.name ?? "Usuario"}!",
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 32,
-                            fontWeight: FontWeight.bold,
-                            shadows: [
-                              Shadow(
-                                blurRadius: 4,
-                                color: Colors.black45,
-                                offset: Offset(2, 2),
-                              ),
-                            ],
-                          ),
+                        // icono de configuración
+                        IconButton(
+                          icon: const Icon(Icons.settings,
+                              color: Colors.white, size: 28),
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (_) =>
+                                  const Ajustes()),
+                            );
+                          },
                         ),
-                        const SizedBox(height: 30),
-
-                        _buildSummaryRow(),
-                        const SizedBox(height: 16),
-                        _buildQuickActions(context),
-                        const SizedBox(height: 20),
-                        _buildMapExploreCard(context),
-                        const SizedBox(height: 25),
-
-                        // Tarjeta de Próximos trabajos (dinámica)
-                        _buildAssignedJobsCard(),
-                        const SizedBox(height: 20),
-
-                        // Tarjeta de Hacer publicación con botón
-                        _buildPublicationCard(),
-                        const SizedBox(height: 40),
                       ],
                     ),
                   ),
+
+                  const SizedBox(height: 14),
+                  // saludo
+                  Text(
+                    "¡Hola ${_currentUser?.name ?? "Usuario"}!",
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 32,
+                      fontWeight: FontWeight.bold,
+                      shadows: [
+                        Shadow(
+                          blurRadius: 4,
+                          color: Colors.black45,
+                          offset: Offset(2, 2),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 30),
+
+                  _buildSummaryRow(),
+                  const SizedBox(height: 16),
+                  _buildQuickActions(context),
+                  const SizedBox(height: 20),
+                  _buildMapExploreCard(context),
+                  const SizedBox(height: 25),
+
+                  // Tarjeta de Próximos trabajos (dinámica)
+                  _buildAssignedJobsCard(),
+                  const SizedBox(height: 20),
+
+                  // Tarjeta de Hacer publicación con botón
+                  _buildPublicationCard(),
+                  const SizedBox(height: 40),
+                ],
+              ),
+            ),
           ),
         ],
       ),
@@ -251,10 +280,10 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
         children: actions
             .map(
               (action) => Padding(
-                padding: const EdgeInsets.only(bottom: 12),
-                child: _quickActionCard(action),
-              ),
-            )
+            padding: const EdgeInsets.only(bottom: 12),
+            child: _quickActionCard(action),
+          ),
+        )
             .toList(),
       ),
     );
@@ -392,7 +421,7 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
                   job.description.length > 50
                       ? '${job.description.substring(0, 50)}...'
                       : job.description,
-                  style: TextStyle(
+                  style: const TextStyle(
                     color: Colors.white70,
                     fontSize: 12,
                   ),
@@ -483,7 +512,7 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
     );
   }
 
-  // NAV BAR CON ICONOS MASCULINOS
+  // NAV BAR CON ICONOS
   Widget _bottomNav() {
     return BottomNavigationBar(
       backgroundColor: const Color(0xFF0D1B2A),
@@ -553,107 +582,107 @@ class _HomeAction {
   });
 }
 
-  Widget _buildMapExploreCard(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24),
-      child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.all(18),
-        decoration: BoxDecoration(
-          color: const Color(0xFF091836),
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: Colors.white12),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Explorar en el mapa',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 6),
-            const Text(
-              'Encuentra trabajadores y publicaciones según tu ubicación actual.',
-              style: TextStyle(color: Colors.white70, fontSize: 13),
-            ),
-            const SizedBox(height: 12),
-            Align(
-              alignment: Alignment.centerRight,
-              child: ElevatedButton(
-                onPressed: () => Navigator.pushNamed(context, '/mapa-servicios'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF244BFF),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
-                ),
-                child: const Text(
-                  'Ver mapa',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
+Widget _buildMapExploreCard(BuildContext context) {
+  return Padding(
+    padding: const EdgeInsets.symmetric(horizontal: 24),
+    child: Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: const Color(0xFF091836),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Colors.white12),
       ),
-    );
-  }
-
-  Widget _buildLoggedOutState(BuildContext context) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 32),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(Icons.lock_outline,
-                color: Colors.white70, size: 72),
-            const SizedBox(height: 20),
-            const Text(
-              'Inicia sesión para ver tu tablero',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-              ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Explorar en el mapa',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
             ),
-            const SizedBox(height: 12),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.pushNamedAndRemoveUntil(
-                  context,
-                  '/login',
-                  (route) => false,
-                );
-              },
+          ),
+          const SizedBox(height: 6),
+          const Text(
+            'Encuentra trabajadores y publicaciones según tu ubicación actual.',
+            style: TextStyle(color: Colors.white70, fontSize: 13),
+          ),
+          const SizedBox(height: 12),
+          Align(
+            alignment: Alignment.centerRight,
+            child: ElevatedButton(
+              onPressed: () => Navigator.pushNamed(context, '/mapa-servicios'),
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.lightBlueAccent,
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                backgroundColor: const Color(0xFF244BFF),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
+                padding:
+                const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
               ),
               child: const Text(
-                'Ir a iniciar sesión',
+                'Ver mapa',
                 style: TextStyle(
-                  fontSize: 16,
+                  color: Colors.white,
                   fontWeight: FontWeight.bold,
                 ),
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
-    );
-  }
+    ),
+  );
+}
+
+Widget _buildLoggedOutState(BuildContext context) {
+  return Center(
+    child: Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 32),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Icon(Icons.lock_outline,
+              color: Colors.white70, size: 72),
+          const SizedBox(height: 20),
+          const Text(
+            'Inicia sesión para ver tu tablero',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 12),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pushNamedAndRemoveUntil(
+                context,
+                '/login',
+                    (route) => false,
+              );
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.lightBlueAccent,
+              padding:
+              const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+            child: const Text(
+              'Ir a iniciar sesión',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        ],
+      ),
+    ),
+  );
+}

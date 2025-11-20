@@ -1,36 +1,38 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
 class CategoryModel {
   final String categoryId;
   final String name;
   final String icon;
-  final String color;
+  final String color; // HEX
   final int order;
   final bool active;
+  final bool isCustom;
 
   CategoryModel({
     required this.categoryId,
     required this.name,
     required this.icon,
-    this.color = '#1976D2',
-    this.order = 0,
-    this.active = true,
+    required this.color,
+    required this.order,
+    required this.active,
+    this.isCustom = false,
   });
 
-  factory CategoryModel.fromFirestore(DocumentSnapshot doc) {
-    final data = doc.data() as Map<String, dynamic>;
-
+  // ---- FROM FIRESTORE ----
+  factory CategoryModel.fromMap(String id, Map<String, dynamic> data) {
     return CategoryModel(
-      categoryId: doc.id,
+      categoryId: id,
       name: data['name'] ?? '',
-      icon: data['icon'] ?? 'build',
+      icon: data['icon'] ?? 'more_horiz',
       color: data['color'] ?? '#1976D2',
-      order: data['order'] ?? 0,
-      active: data['active'] ?? true,
+      order: data['order'] ?? 999,
+      active: data['active'] ?? false,
+      isCustom: data['isCustom'] ?? false,
     );
   }
 
+  // ---- TO FIRESTORE ----
   Map<String, dynamic> toMap() {
     return {
       'name': name,
@@ -38,32 +40,45 @@ class CategoryModel {
       'color': color,
       'order': order,
       'active': active,
+      'isCustom': isCustom,
     };
   }
+
+  // ---- Para categoría personalizada ----
+  static CategoryModel custom(String value) {
+    return CategoryModel(
+      categoryId: "custom-${value.toLowerCase().replaceAll(' ', '-')}",
+      name: value,
+      icon: "edit",
+      color: "#555555",
+      order: 999,
+      active: true,
+      isCustom: true,
+    );
+  }
+
+  // ---- Helper methods ----
+  bool get isFallback => categoryId.startsWith('fallback-');
 
   Color get colorValue {
     try {
-      return Color(int.parse(color.replaceFirst('#', '0xFF')));
+      return Color(int.parse(color.replaceAll('#', '0xFF')));
     } catch (e) {
-      return const Color(0xFF1976D2);
+      return const Color(0xFF1976D2); // Color por defecto
     }
   }
 
-  IconData get iconData {
-    final iconMap = {
-      'plumbing': Icons.plumbing,
-      'electrical_services': Icons.electrical_services,
-      'yard': Icons.yard,
-      'cleaning_services': Icons.cleaning_services,
-      'computer': Icons.computer,
-      'school': Icons.school,
-      'format_paint': Icons.format_paint,
-      'carpenter': Icons.carpenter,
-      'local_fire_department': Icons.local_fire_department,
-      'more_horiz': Icons.more_horiz,
-      'build': Icons.build,
-    };
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is CategoryModel && other.categoryId == categoryId;
+  }
 
-    return iconMap[icon] ?? Icons.build;
+  @override
+  int get hashCode => categoryId.hashCode;
+
+  @override
+  String toString() {
+    return 'CategoryModel(categoryId: $categoryId, name: $name, active: $active)';
   }
 }
