@@ -3,7 +3,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../services/auth_service.dart';
 import '../services/phone_verification_service.dart';
 import '../models/user_model.dart';
-import 'terms_screen.dart'; // asegurate que la ruta sea correcta
+import 'terms_screen.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -25,6 +25,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   final AuthService _authService = AuthService();
   final PhoneVerificationService _phoneService = PhoneVerificationService();
+
+  // Map para controlar visibilidad por label
+  final Map<String, bool> _obscure = {};
 
   // Normaliza a +549XXXXXXXXX (Argentina). Ajusta si tu región cambia.
   String normalizePhone(String input) {
@@ -76,19 +79,17 @@ class _RegisterScreenState extends State<RegisterScreen> {
       // Enviar mail de verificación (Firebase)
       await _authService.sendEmailVerification();
 
-      // Enviar OTP via Firebase PhoneAuth (espera hasta que codeSent)
-      await _phoneService.sendOTP(formattedPhone);
-
-      // Navegar a pantalla de verificación de email (desde ahí el usuario hará "Ya verifiqué" y pasará a /verify-phone)
+      // NO enviar OTP desde aquí (lo hará PhoneVerificationScreen)
       if (!mounted) return;
       Navigator.pushReplacementNamed(context, '/verify-email');
     } catch (e) {
       String msg = e.toString();
-      if (msg.contains('email address is already in use')) {
+      if (msg.contains('email address is already in use') ||
+          msg.contains('email-already-in-use')) {
         msg = 'Este correo ya está registrado.';
       } else if (msg.contains('network')) {
         msg = 'Error de conexión.';
-      } else if (msg.contains('password')) {
+      } else if (msg.contains('password') || msg.contains('weak-password')) {
         msg = 'La contraseña es demasiado débil.';
       }
 
@@ -155,9 +156,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   _buildInput(_email, 'Email',
                       inputType: TextInputType.emailAddress),
                   const SizedBox(height: 12),
-                  _buildInput(_pass, 'Contraseña', obscure: true),
+                  _buildInput(_pass, 'Contraseña',
+                      obscure: true, enableVisibilityToggle: true),
                   const SizedBox(height: 12),
-                  _buildInput(_pass2, 'Repetir contraseña', obscure: true),
+                  _buildInput(_pass2, 'Repetir contraseña',
+                      obscure: true, enableVisibilityToggle: true),
                   const SizedBox(height: 12),
                   _buildInput(_phone, 'Número de teléfono',
                       inputType: TextInputType.phone),
@@ -255,10 +258,17 @@ class _RegisterScreenState extends State<RegisterScreen> {
   }
 
   Widget _buildInput(TextEditingController controller, String label,
-      {bool obscure = false, TextInputType inputType = TextInputType.text}) {
+      {bool obscure = false,
+      TextInputType inputType = TextInputType.text,
+      bool enableVisibilityToggle = false}) {
+    // inicializar valor si no existe
+    if (obscure && !_obscure.containsKey(label)) {
+      _obscure[label] = true;
+    }
+
     return TextFormField(
       controller: controller,
-      obscureText: obscure,
+      obscureText: obscure ? (_obscure[label] ?? true) : false,
       keyboardType: inputType,
       validator: (v) {
         if (v == null || v.isEmpty) return 'Campo obligatorio';
@@ -283,6 +293,32 @@ class _RegisterScreenState extends State<RegisterScreen> {
             borderSide: const BorderSide(color: Colors.white)),
         filled: true,
         fillColor: Colors.white10,
+        suffixIcon: enableVisibilityToggle
+            ? GestureDetector(
+                onTap: () {
+                  setState(() {
+                    _obscure[label] = !(_obscure[label] ?? true);
+                  });
+                },
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                  child: Image.asset(
+                    _obscure[label] == true
+                        ? 'assets/images/eye2.png'
+                        : 'assets/images/eye.png',
+                    width: 26,
+                    height: 26,
+                    fit: BoxFit.contain,
+                    filterQuality: FilterQuality.high,
+                    errorBuilder: (_, __, ___) => Icon(
+                      _obscure[label] == true
+                          ? Icons.visibility_off
+                          : Icons.visibility,
+                    ),
+                  ),
+                ),
+              )
+            : null,
       ),
     );
   }

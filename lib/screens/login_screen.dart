@@ -17,6 +17,8 @@ class _LoginScreenState extends State<LoginScreen> {
   final _pass = TextEditingController();
   bool _loading = false;
 
+  bool _passwordVisible = false; // 👁 Control del ojo
+
   final AuthService _authService = AuthService();
   final UserService _userService = UserService();
 
@@ -32,7 +34,6 @@ class _LoginScreenState extends State<LoginScreen> {
     setState(() => _loading = true);
 
     try {
-      // Llamada real a tu AuthService
       final UserModel? userModel = await _authService.signIn(
         email: _email.text.trim(),
         password: _pass.text.trim(),
@@ -40,7 +41,6 @@ class _LoginScreenState extends State<LoginScreen> {
 
       if (userModel == null) throw 'Error al iniciar sesión';
 
-      // Guardar sesión local (cache útil)
       final sp = await SharedPreferences.getInstance();
       await sp.setBool('loggedIn', true);
       await sp.setString('userId', userModel.userId);
@@ -82,7 +82,6 @@ class _LoginScreenState extends State<LoginScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  // LOGO
                   Padding(
                     padding: const EdgeInsets.only(bottom: 20),
                     child: Image.asset(
@@ -115,10 +114,33 @@ class _LoginScreenState extends State<LoginScreen> {
                     inputType: TextInputType.emailAddress,
                   ),
                   const SizedBox(height: 14),
-                  _buildInput(_pass, 'Contraseña', obscure: true),
+
+                  // 👁 Contraseña con ojo
+                  _buildInput(
+                    _pass,
+                    'Contraseña',
+                    obscure: !_passwordVisible,
+                    suffixIcon: GestureDetector(
+                      onTap: () => setState(() {
+                        _passwordVisible = !_passwordVisible;
+                      }),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 12),
+                        child: Image.asset(
+                          _passwordVisible
+                              ? 'assets/images/eye.png'
+                              : 'assets/images/eye2.png',
+                          width: 26, // 🔹 tamaño más grande y nítido
+                          height: 26,
+                          fit: BoxFit.contain, // 🔹 mantiene proporción
+                          filterQuality:
+                              FilterQuality.high, // 🔹 mejora nitidez
+                        ),
+                      ),
+                    ),
+                  ),
                   const SizedBox(height: 24),
 
-                  // BOTÓN ACCEDER
                   _loading
                       ? const CircularProgressIndicator(color: Colors.white)
                       : SizedBox(
@@ -145,7 +167,6 @@ class _LoginScreenState extends State<LoginScreen> {
 
                   const SizedBox(height: 20),
 
-                  // BOTÓN CREAR CUENTA
                   SizedBox(
                     width: double.infinity,
                     height: 48,
@@ -182,6 +203,7 @@ class _LoginScreenState extends State<LoginScreen> {
     String label, {
     bool obscure = false,
     TextInputType inputType = TextInputType.text,
+    Widget? suffixIcon,
   }) {
     return TextFormField(
       controller: controller,
@@ -209,6 +231,7 @@ class _LoginScreenState extends State<LoginScreen> {
         ),
         filled: true,
         fillColor: Colors.white10,
+        suffixIcon: suffixIcon,
       ),
     );
   }
