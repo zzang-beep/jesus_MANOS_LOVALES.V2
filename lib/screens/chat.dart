@@ -4,6 +4,7 @@ import '../screens/profile_screen.dart';
 import '../screens/home_dashboard_screen.dart';
 import '../models/chat_contact.dart';
 import '../services/chat_contact_service.dart';
+import '../screens/payment_dashboard.dart';
 
 // ======================= LISTA DE CONTACTOS =======================
 class ChatContactoScreen extends StatefulWidget {
@@ -71,8 +72,8 @@ class _ChatContactoScreenState extends State<ChatContactoScreen> {
                 Expanded(
                   child: _isLoading
                       ? const Center(
-                          child:
-                              CircularProgressIndicator(color: Colors.blueAccent))
+                          child: CircularProgressIndicator(
+                              color: Colors.blueAccent))
                       : _contactos.isEmpty
                           ? _buildEmptyState(context)
                           : RefreshIndicator(
@@ -88,7 +89,8 @@ class _ChatContactoScreenState extends State<ChatContactoScreen> {
                                         vertical: 6, horizontal: 12),
                                     child: ListTile(
                                       leading: CircleAvatar(
-                                        backgroundImage: contacto.photoUrl.isNotEmpty
+                                        backgroundImage: contacto
+                                                .photoUrl.isNotEmpty
                                             ? NetworkImage(contacto.photoUrl)
                                             : null,
                                         child: contacto.photoUrl.isEmpty
@@ -97,8 +99,8 @@ class _ChatContactoScreenState extends State<ChatContactoScreen> {
                                             : null,
                                       ),
                                       title: Text(contacto.name,
-                                          style:
-                                              const TextStyle(color: Colors.white)),
+                                          style: const TextStyle(
+                                              color: Colors.white)),
                                       subtitle: Text(
                                         contacto.bio.isEmpty
                                             ? 'Zona ${contacto.zone.isEmpty ? 'sin especificar' : contacto.zone}'
@@ -146,8 +148,7 @@ class _ChatContactoScreenState extends State<ChatContactoScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.people_outline,
-                color: Colors.white30, size: 64),
+            const Icon(Icons.people_outline, color: Colors.white30, size: 64),
             const SizedBox(height: 16),
             const Text(
               'Todavía no agregaste contactos',
@@ -355,32 +356,76 @@ class _ChatScreenState extends State<ChatScreen> {
                     },
                   ),
                 ),
-                // Caja de mensaje
+                // Caja de mensaje + Botón de pago
                 Container(
                   padding: const EdgeInsets.all(8),
-                  child: Row(
+                  child: Column(
                     children: [
-                      Expanded(
-                        child: TextField(
-                          controller: _controller,
-                          style: const TextStyle(color: Colors.white),
-                          decoration: InputDecoration(
-                            hintText: "Mensaje...",
-                            hintStyle: const TextStyle(color: Colors.white60),
-                            filled: true,
-                            fillColor: Colors.black26,
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(24),
-                              borderSide: BorderSide.none,
+                      // Campo de mensaje
+                      Row(
+                        children: [
+                          Expanded(
+                            child: TextField(
+                              controller: _controller,
+                              style: const TextStyle(color: Colors.white),
+                              decoration: InputDecoration(
+                                hintText: "Mensaje...",
+                                hintStyle:
+                                    const TextStyle(color: Colors.white60),
+                                filled: true,
+                                fillColor: Colors.black26,
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(24),
+                                  borderSide: BorderSide.none,
+                                ),
+                              ),
+                              onSubmitted: (_) => _send(),
                             ),
                           ),
-                          onSubmitted: (_) => _send(),
-                        ),
+                          IconButton(
+                            icon: const Icon(Icons.send,
+                                color: Colors.lightBlueAccent),
+                            onPressed: _send,
+                          ),
+                        ],
                       ),
-                      IconButton(
-                        icon: const Icon(Icons.send,
-                            color: Colors.lightBlueAccent),
-                        onPressed: _send,
+
+                      const SizedBox(height: 10),
+
+                      // BOTÓN DE INICIAR PAGO
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton.icon(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.lightBlueAccent,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                          ),
+                          icon: const Icon(Icons.payments_outlined,
+                              color: Colors.white),
+                          label: const Text(
+                            "Iniciar pago",
+                            style: TextStyle(color: Colors.white, fontSize: 16),
+                          ),
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => PaymentDashboard(
+                                  workerId: widget.contact
+                                      .userId, // ✔ CORRECTO según tu modelo
+                                  amount:
+                                      0.0, // luego lo reemplazamos por el real
+                                  chatId: widget.contact
+                                      .userId, // si querés uso otro, decime
+                                  serviceId:
+                                      "service_test", // luego lo cambiamos por el real
+                                ),
+                              ),
+                            );
+                          },
+                        ),
                       ),
                     ],
                   ),
