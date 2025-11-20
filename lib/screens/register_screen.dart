@@ -4,6 +4,7 @@ import '../services/auth_service.dart';
 import '../services/phone_verification_service.dart';
 import '../models/user_model.dart';
 import 'terms_screen.dart'; // asegurate que la ruta sea correcta
+import '../widgets/password_toggle_text_field.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -256,21 +257,31 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   Widget _buildInput(TextEditingController controller, String label,
       {bool obscure = false, TextInputType inputType = TextInputType.text}) {
+    final validator = (String? v) {
+      if (v == null || v.isEmpty) return 'Campo obligatorio';
+      if (label.toLowerCase().contains('email') &&
+          !RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(v)) {
+        return 'Email inválido';
+      }
+      if (label.toLowerCase().contains('contraseña') && v.length < 6) {
+        return 'Mínimo 6 caracteres';
+      }
+      return null;
+    };
+
+    if (obscure) {
+      return PasswordToggleTextField(
+        controller: controller,
+        label: label,
+        validator: validator,
+        keyboardType: inputType,
+      );
+    }
+
     return TextFormField(
       controller: controller,
-      obscureText: obscure,
       keyboardType: inputType,
-      validator: (v) {
-        if (v == null || v.isEmpty) return 'Campo obligatorio';
-        if (label.toLowerCase().contains('email') &&
-            !RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(v)) {
-          return 'Email inválido';
-        }
-        if (label.toLowerCase().contains('contraseña') && v.length < 6) {
-          return 'Mínimo 6 caracteres';
-        }
-        return null;
-      },
+      validator: validator,
       style: const TextStyle(color: Colors.white),
       decoration: InputDecoration(
         labelText: label,

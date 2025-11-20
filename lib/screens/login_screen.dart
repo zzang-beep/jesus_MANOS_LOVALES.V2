@@ -4,6 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../services/auth_service.dart';
 import '../services/user_service.dart';
 import '../models/user_model.dart';
+import '../widgets/password_toggle_text_field.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -199,6 +200,20 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                     ),
                   ),
+
+                  const SizedBox(height: 16),
+                  TextButton(
+                    onPressed: () {
+                      Navigator.pushNamed(context, '/forgot-password-email');
+                    },
+                    child: const Text(
+                      '¿Olvidaste tu contraseña?',
+                      style: TextStyle(
+                        color: Colors.white70,
+                        decoration: TextDecoration.underline,
+                      ),
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -214,18 +229,29 @@ class _LoginScreenState extends State<LoginScreen> {
     bool obscure = false,
     TextInputType inputType = TextInputType.text,
   }) {
+    final validator = (String? v) {
+      if (v == null || v.isEmpty) return 'Campo obligatorio';
+      if (label.toLowerCase().contains('correo') &&
+          !RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(v)) {
+        return 'Email inválido';
+      }
+      return null;
+    };
+
+    if (obscure) {
+      return PasswordToggleTextField(
+        controller: controller,
+        label: label,
+        validator: validator,
+        keyboardType: inputType,
+      );
+    }
+
     return TextFormField(
       controller: controller,
-      obscureText: obscure,
+      obscureText: false,
       keyboardType: inputType,
-      validator: (v) {
-        if (v == null || v.isEmpty) return 'Campo obligatorio';
-        if (label.toLowerCase().contains('correo') &&
-            !RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(v)) {
-          return 'Email inválido';
-        }
-        return null;
-      },
+      validator: validator,
       style: const TextStyle(color: Colors.white),
       decoration: InputDecoration(
         labelText: label,

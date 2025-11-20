@@ -22,6 +22,9 @@ import 'screens/chat.dart';
 import 'screens/admin_screen.dart';
 import 'detalle_candidato_screen.dart';
 import 'detalle_puesto_trabajo_screen.dart';
+import 'screens/forgot_password_email_screen.dart';
+import 'screens/forgot_password_code_screen.dart';
+import 'screens/forgot_password_change_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -66,6 +69,12 @@ class MyApp extends StatelessWidget {
           '/admin': (context) => const AdminScreen(),
           '/detalle_candidato': (context) => const DetalleCandidatoScreen(),
           '/detalle_puesto': (context) => const DetallePuestoScreen(),
+          '/forgot-password-email': (context) =>
+              const ForgotPasswordEmailScreen(),
+          '/forgot-password-code': (context) =>
+              const ForgotPasswordCodeScreen(),
+          '/forgot-password-change': (context) =>
+              const ForgotPasswordChangeScreen(),
         },
       ),
     );
