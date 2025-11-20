@@ -45,5 +45,5 @@ flutter {
 }
 dependencies {
   implementation(platform("com.google.firebase:firebase-bom:34.5.0"))
-  implementation 'com.google.android.gms:play-services-maps:18.2.0'
+  implementation("com.google.android.gms:play-services-maps:18.2.0")
 }

@@ -37,8 +37,6 @@ dependencies:
   url_launcher: ^6.3.2            # Abrir WhatsApp/teléfono
   google_generative_ai: ^0.4.7    #Por las dudas
   
-  google_ml_kit: ^0.16.0  # Alternativa local si la API falla
-
   # Icons
   cupertino_icons: ^1.0.8
 
