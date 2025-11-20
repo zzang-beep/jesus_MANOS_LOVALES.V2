@@ -5,7 +5,7 @@ import '../services/auth_service.dart';
 import '../models/service_model.dart';
 
 class MyActiveServicesScreen extends StatefulWidget {
-  const MyActiveServicesScreen({Key? key}) : super(key: key);
+  const MyActiveServicesScreen({super.key});
 
   @override
   State<MyActiveServicesScreen> createState() => _MyActiveServicesScreenState();

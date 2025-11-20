@@ -5,10 +5,10 @@ class CategoryFilterSheet extends StatefulWidget {
   final Function(List<String>) onApply;
 
   const CategoryFilterSheet({
-    Key? key,
+    super.key,
     required this.selectedCategories,
     required this.onApply,
-  }) : super(key: key);
+  });
 
   @override
   State<CategoryFilterSheet> createState() => _CategoryFilterSheetState();
@@ -88,7 +88,7 @@ class _CategoryFilterSheetState extends State<CategoryFilterSheet> {
                 });
               },
             );
-          }).toList(),
+          }),
 
           const SizedBox(height: 20),
 

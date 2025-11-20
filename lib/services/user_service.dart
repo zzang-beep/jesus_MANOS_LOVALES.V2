@@ -140,4 +140,13 @@ class UserService {
       throw 'Error al reactivar usuario: $e';
     }
   }
+
+  // ============== ELIMINAR USUARIO COMPLETAMENTE ==============
+  Future<void> deleteUser(String userId) async {
+    try {
+      await _usersCollection.doc(userId).delete();
+    } catch (e) {
+      throw 'Error al eliminar usuario: $e';
+    }
+  }
 }

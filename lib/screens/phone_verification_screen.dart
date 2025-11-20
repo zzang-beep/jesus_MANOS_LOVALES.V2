@@ -1,8 +1,11 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../services/phone_verification_service.dart';
+import '../services/user_service.dart';
+import '../services/auth_service.dart';
 
 class PhoneVerificationScreen extends StatefulWidget {
   const PhoneVerificationScreen({super.key});
@@ -15,6 +18,8 @@ class PhoneVerificationScreen extends StatefulWidget {
 class _PhoneVerificationScreenState extends State<PhoneVerificationScreen> {
   final _codeController = TextEditingController();
   final _phoneService = PhoneVerificationService();
+  final UserService _userService = UserService();
+  final AuthService _authService = AuthService();
   String? _userId;
   String? _realPhone;
   String? _phoneMasked;
@@ -134,6 +139,26 @@ class _PhoneVerificationScreenState extends State<PhoneVerificationScreen> {
     );
   }
 
+  Future<void> _cancelAndRestart() async {
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user != null) {
+        await _userService.deleteUser(user.uid);
+        await user.delete();
+      }
+    } catch (_) {
+      // ignorar errores y continuar con signOut
+    }
+
+    await _authService.signOut();
+    final sp = await SharedPreferences.getInstance();
+    await sp.remove('userId');
+    await sp.setBool('loggedIn', false);
+
+    if (!mounted) return;
+    Navigator.pushNamedAndRemoveUntil(context, '/register', (route) => false);
+  }
+
   @override
   Widget build(BuildContext context) {
     final azulPrincipal = const Color(0xFF1976D2);
@@ -218,6 +243,17 @@ class _PhoneVerificationScreenState extends State<PhoneVerificationScreen> {
                                 child: const Text(
                                   'Reenviar código',
                                   style: TextStyle(color: Colors.white),
+                                ),
+                              ),
+                              const SizedBox(height: 12),
+                              TextButton(
+                                onPressed: _cancelAndRestart,
+                                child: const Text(
+                                  'Ingresé mal mis datos, quiero volver',
+                                  style: TextStyle(
+                                    color: Colors.white70,
+                                    decoration: TextDecoration.underline,
+                                  ),
                                 ),
                               ),
                             ],

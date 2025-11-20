@@ -27,11 +27,15 @@ dependencies:
   # UI & Images
   image_picker: ^1.2.0             # Seleccionar fotos
   cached_network_image: ^3.4.1     # Caché de imágenes
-  
+  # Google Maps - NUEVAS
+  google_maps_flutter: ^2.14.0
+  geolocator: ^14.0.2
+  geocoding: ^4.0.0
   # Utils
   intl: ^0.20.2                    # Formateo de fechas
   http: ^1.6.0                     # HTTP requests (SMS)
   url_launcher: ^6.3.2            # Abrir WhatsApp/teléfono
+  google_generative_ai: ^0.4.7    #Por las dudas
   
   # Icons
   cupertino_icons: ^1.0.8
@@ -49,5 +53,7 @@ flutter:
     - assets/images/inicio3.png
     - assets/images/logo.png
     - assets/images/fondodeapp.png
+    - assets/images/eye.png
+    - assets/images/eye2.png
 
   #   - assets/icons/

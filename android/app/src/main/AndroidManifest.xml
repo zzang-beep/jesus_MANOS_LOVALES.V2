@@ -1,8 +1,15 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <uses-permission android:name="android.permission.INTERNET"/>
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    
     <application
         android:label="manos_locales"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
+        <meta-data
+            android:name="com.google.android.geo.AIzaSyCxPCmOImRCH_Z8J23z1M2VsLC8IH_rE1s"
+            android:value="AIzaSyCxPCmOImRCH_Z8J23z1M2VsLC8IH_rE1s"/>
         <activity
             android:name=".MainActivity"
             android:exported="true"

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import '../models/service_model.dart';
 
 class ServiceCardDiscover extends StatelessWidget {
@@ -7,10 +6,10 @@ class ServiceCardDiscover extends StatelessWidget {
   final VoidCallback onTap;
 
   const ServiceCardDiscover({
-    Key? key,
+    super.key,
     required this.service,
     required this.onTap,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

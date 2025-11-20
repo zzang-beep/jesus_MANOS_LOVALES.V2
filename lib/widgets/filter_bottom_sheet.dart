@@ -8,13 +8,13 @@ class FilterBottomSheet extends StatelessWidget {
   final Function(String?) onSelected;
 
   const FilterBottomSheet({
-    Key? key,
+    super.key,
     required this.title,
     required this.icon,
     required this.options,
     this.selectedOption,
     required this.onSelected,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -63,7 +63,7 @@ class FilterBottomSheet extends StatelessWidget {
               value: option,
               isSelected: selectedOption == option,
             );
-          }).toList(),
+          }),
         ],
       ),
     );

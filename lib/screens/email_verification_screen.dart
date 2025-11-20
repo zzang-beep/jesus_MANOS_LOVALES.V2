@@ -1,7 +1,9 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../services/auth_service.dart';
+import '../services/user_service.dart';
 
 class EmailVerificationScreen extends StatefulWidget {
   const EmailVerificationScreen({super.key});
@@ -13,6 +15,7 @@ class EmailVerificationScreen extends StatefulWidget {
 
 class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
   final AuthService _authService = AuthService();
+  final UserService _userService = UserService();
   bool _isVerifying = false;
   bool _emailVerified = false;
   Timer? _pollTimer;
@@ -83,6 +86,27 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
     }
   }
 
+  Future<void> _cancelAndRestart() async {
+    try {
+      final currentUser = FirebaseAuth.instance.currentUser;
+      final uid = currentUser?.uid;
+      if (uid != null) {
+        await _userService.deleteUser(uid);
+      }
+      await currentUser?.delete();
+    } catch (_) {
+      // Ignoramos si no se puede borrar; igual seguimos con signOut
+    }
+
+    await _authService.signOut();
+    final sp = await SharedPreferences.getInstance();
+    await sp.remove('userId');
+    await sp.setBool('loggedIn', false);
+
+    if (!mounted) return;
+    Navigator.pushNamedAndRemoveUntil(context, '/register', (route) => false);
+  }
+
   @override
   Widget build(BuildContext context) {
     final azulPrincipal = const Color(0xFF1976D2);
@@ -143,6 +167,14 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
                         ),
                       ],
                     ),
+              const SizedBox(height: 16),
+              TextButton(
+                onPressed: _cancelAndRestart,
+                child: const Text(
+                  'Ingresé mal mis datos, quiero volver',
+                  style: TextStyle(decoration: TextDecoration.underline),
+                ),
+              ),
             ],
           ),
         ),

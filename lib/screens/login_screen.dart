@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../services/auth_service.dart';
 import '../services/user_service.dart';
 import '../models/user_model.dart';
+import '../widgets/password_toggle_text_field.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -40,10 +42,29 @@ class _LoginScreenState extends State<LoginScreen> {
 
       if (userModel == null) throw 'Error al iniciar sesión';
 
-      // Guardar sesión local (cache útil)
+      final firebaseUser = FirebaseAuth.instance.currentUser;
+      await firebaseUser?.reload();
+
+      if (firebaseUser == null) {
+        throw 'No se pudo obtener el usuario actual';
+      }
+
       final sp = await SharedPreferences.getInstance();
-      await sp.setBool('loggedIn', true);
       await sp.setString('userId', userModel.userId);
+      await sp.setBool('loggedIn', false);
+
+      if (!firebaseUser.emailVerified) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Debes verificar tu correo antes de continuar'),
+          ),
+        );
+        Navigator.pushReplacementNamed(context, '/verify-email');
+        return;
+      }
+
+      await sp.setBool('loggedIn', true);
 
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -143,7 +164,25 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                         ),
 
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 12),
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: TextButton(
+                      onPressed: () {
+                        Navigator.pushNamed(
+                            context, '/forgot-password-email');
+                      },
+                      child: const Text(
+                        '¿Olvidó su contraseña?',
+                        style: TextStyle(
+                          color: Colors.white70,
+                          decoration: TextDecoration.underline,
+                        ),
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 8),
 
                   // BOTÓN CREAR CUENTA
                   SizedBox(
@@ -168,6 +207,8 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                     ),
                   ),
+
+                  const SizedBox(height: 8),
                 ],
               ),
             ),
@@ -183,18 +224,29 @@ class _LoginScreenState extends State<LoginScreen> {
     bool obscure = false,
     TextInputType inputType = TextInputType.text,
   }) {
+    String? validator(String? v) {
+      if (v == null || v.isEmpty) return 'Campo obligatorio';
+      if (label.toLowerCase().contains('correo') &&
+          !RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(v)) {
+        return 'Email inválido';
+      }
+      return null;
+    }
+
+    if (obscure) {
+      return PasswordToggleTextField(
+        controller: controller,
+        label: label,
+        validator: validator,
+        keyboardType: inputType,
+      );
+    }
+
     return TextFormField(
       controller: controller,
-      obscureText: obscure,
+      obscureText: false,
       keyboardType: inputType,
-      validator: (v) {
-        if (v == null || v.isEmpty) return 'Campo obligatorio';
-        if (label.toLowerCase().contains('correo') &&
-            !RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(v)) {
-          return 'Email inválido';
-        }
-        return null;
-      },
+      validator: validator,
       style: const TextStyle(color: Colors.white),
       decoration: InputDecoration(
         labelText: label,

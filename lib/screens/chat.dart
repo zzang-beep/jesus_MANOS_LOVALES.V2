@@ -2,20 +2,9 @@ import 'package:flutter/material.dart';
 import '../screens/discover_screen.dart';
 import '../screens/profile_screen.dart';
 import '../screens/home_dashboard_screen.dart';
-
-class ChatContact {
-  final String userId;
-  final String name;
-  final String photoUrl;
-  final String bio;
-
-  ChatContact({
-    required this.userId,
-    required this.name,
-    required this.photoUrl,
-    required this.bio,
-  });
-}
+import '../models/chat_contact.dart';
+import '../services/chat_contact_service.dart';
+import '../screens/payment_dashboard.dart';
 
 // ======================= LISTA DE CONTACTOS =======================
 class ChatContactoScreen extends StatefulWidget {
@@ -26,30 +15,23 @@ class ChatContactoScreen extends StatefulWidget {
 }
 
 class _ChatContactoScreenState extends State<ChatContactoScreen> {
-  late List<ChatContact> _contactos;
+  final ChatContactService _contactService = ChatContactService();
+  List<ChatContact> _contactos = [];
+  bool _isLoading = true;
   int _selectedIndex = 1;
   @override
   void initState() {
     super.initState();
-    _contactos = _crearContactosFake();
+    _loadContacts();
   }
 
-  List<ChatContact> _crearContactosFake() {
-    return [
-      ChatContact(userId: "1", name: "Juan", photoUrl: "", bio: "Cortar pasto"),
-      ChatContact(
-          userId: "2", name: "María", photoUrl: "", bio: "Arreglar casa"),
-      ChatContact(
-          userId: "3", name: "Pedro", photoUrl: "", bio: "Pintar paredes"),
-      ChatContact(userId: "4", name: "Lucía", photoUrl: "", bio: "Mudanzas"),
-      ChatContact(
-          userId: "5",
-          name: "Carlos",
-          photoUrl: "",
-          bio: "Reparar computadoras"),
-      ChatContact(
-          userId: "6", name: "Ana", photoUrl: "", bio: "Limpieza de casas"),
-    ];
+  Future<void> _loadContacts() async {
+    final contacts = await _contactService.loadContacts();
+    if (!mounted) return;
+    setState(() {
+      _contactos = contacts;
+      _isLoading = false;
+    });
   }
 
   @override
@@ -88,36 +70,67 @@ class _ChatContactoScreenState extends State<ChatContactoScreen> {
                 ),
                 const SizedBox(height: 10),
                 Expanded(
-                  child: ListView.builder(
-                    itemCount: _contactos.length,
-                    itemBuilder: (context, index) {
-                      final contacto = _contactos[index];
-                      return Card(
-                        color: const Color(0xFF1B263B).withOpacity(0.8),
-                        margin: const EdgeInsets.symmetric(
-                            vertical: 6, horizontal: 12),
-                        child: ListTile(
-                          leading: CircleAvatar(
-                            child: contacto.photoUrl.isEmpty
-                                ? const Icon(Icons.person, color: Colors.white)
-                                : null,
-                          ),
-                          title: Text(contacto.name,
-                              style: const TextStyle(color: Colors.white)),
-                          subtitle: Text(contacto.bio,
-                              style: const TextStyle(color: Colors.white70)),
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => ChatScreen(contact: contacto),
+                  child: _isLoading
+                      ? const Center(
+                          child: CircularProgressIndicator(
+                              color: Colors.blueAccent))
+                      : _contactos.isEmpty
+                          ? _buildEmptyState(context)
+                          : RefreshIndicator(
+                              onRefresh: _loadContacts,
+                              child: ListView.builder(
+                                itemCount: _contactos.length,
+                                itemBuilder: (context, index) {
+                                  final contacto = _contactos[index];
+                                  return Card(
+                                    color: const Color(0xFF1B263B)
+                                        .withOpacity(0.8),
+                                    margin: const EdgeInsets.symmetric(
+                                        vertical: 6, horizontal: 12),
+                                    child: ListTile(
+                                      leading: CircleAvatar(
+                                        backgroundImage: contacto
+                                                .photoUrl.isNotEmpty
+                                            ? NetworkImage(contacto.photoUrl)
+                                            : null,
+                                        child: contacto.photoUrl.isEmpty
+                                            ? const Icon(Icons.person,
+                                                color: Colors.white)
+                                            : null,
+                                      ),
+                                      title: Text(contacto.name,
+                                          style: const TextStyle(
+                                              color: Colors.white)),
+                                      subtitle: Text(
+                                        contacto.bio.isEmpty
+                                            ? 'Zona ${contacto.zone.isEmpty ? 'sin especificar' : contacto.zone}'
+                                            : contacto.bio,
+                                        style: const TextStyle(
+                                            color: Colors.white70),
+                                      ),
+                                      trailing: contacto.zone.isEmpty
+                                          ? null
+                                          : Text(
+                                              contacto.zone,
+                                              style: const TextStyle(
+                                                color: Colors.lightBlueAccent,
+                                                fontSize: 12,
+                                              ),
+                                            ),
+                                      onTap: () {
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (_) =>
+                                                ChatScreen(contact: contacto),
+                                          ),
+                                        );
+                                      },
+                                    ),
+                                  );
+                                },
                               ),
-                            );
-                          },
-                        ),
-                      );
-                    },
-                  ),
+                            ),
                 ),
               ],
             ),
@@ -125,6 +138,49 @@ class _ChatContactoScreenState extends State<ChatContactoScreen> {
         ],
       ),
       bottomNavigationBar: _bottomNav(),
+    );
+  }
+
+  Widget _buildEmptyState(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 32),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.people_outline, color: Colors.white30, size: 64),
+            const SizedBox(height: 16),
+            const Text(
+              'Todavía no agregaste contactos',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: Colors.white70,
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              'Buscá candidatos y usa el botón “Contactar” para guardar la conversación.',
+              textAlign: TextAlign.center,
+              style: TextStyle(color: Colors.white54),
+            ),
+            const SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const DiscoverScreen()),
+                );
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.lightBlueAccent,
+              ),
+              child: const Text('Buscar candidatos'),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -300,32 +356,76 @@ class _ChatScreenState extends State<ChatScreen> {
                     },
                   ),
                 ),
-                // Caja de mensaje
+                // Caja de mensaje + Botón de pago
                 Container(
                   padding: const EdgeInsets.all(8),
-                  child: Row(
+                  child: Column(
                     children: [
-                      Expanded(
-                        child: TextField(
-                          controller: _controller,
-                          style: const TextStyle(color: Colors.white),
-                          decoration: InputDecoration(
-                            hintText: "Mensaje...",
-                            hintStyle: const TextStyle(color: Colors.white60),
-                            filled: true,
-                            fillColor: Colors.black26,
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(24),
-                              borderSide: BorderSide.none,
+                      // Campo de mensaje
+                      Row(
+                        children: [
+                          Expanded(
+                            child: TextField(
+                              controller: _controller,
+                              style: const TextStyle(color: Colors.white),
+                              decoration: InputDecoration(
+                                hintText: "Mensaje...",
+                                hintStyle:
+                                    const TextStyle(color: Colors.white60),
+                                filled: true,
+                                fillColor: Colors.black26,
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(24),
+                                  borderSide: BorderSide.none,
+                                ),
+                              ),
+                              onSubmitted: (_) => _send(),
                             ),
                           ),
-                          onSubmitted: (_) => _send(),
-                        ),
+                          IconButton(
+                            icon: const Icon(Icons.send,
+                                color: Colors.lightBlueAccent),
+                            onPressed: _send,
+                          ),
+                        ],
                       ),
-                      IconButton(
-                        icon: const Icon(Icons.send,
-                            color: Colors.lightBlueAccent),
-                        onPressed: _send,
+
+                      const SizedBox(height: 10),
+
+                      // BOTÓN DE INICIAR PAGO
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton.icon(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.lightBlueAccent,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                          ),
+                          icon: const Icon(Icons.payments_outlined,
+                              color: Colors.white),
+                          label: const Text(
+                            "Iniciar pago",
+                            style: TextStyle(color: Colors.white, fontSize: 16),
+                          ),
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => PaymentDashboard(
+                                  workerId: widget.contact
+                                      .userId, // ✔ CORRECTO según tu modelo
+                                  amount:
+                                      0.0, // luego lo reemplazamos por el real
+                                  chatId: widget.contact
+                                      .userId, // si querés uso otro, decime
+                                  serviceId:
+                                      "service_test", // luego lo cambiamos por el real
+                                ),
+                              ),
+                            );
+                          },
+                        ),
                       ),
                     ],
                   ),

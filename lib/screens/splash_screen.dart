@@ -1,6 +1,9 @@
 // lib/screens/splash_screen.dart
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
 import '../services/auth_service.dart';
+import '../services/user_service.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -11,6 +14,7 @@ class SplashScreen extends StatefulWidget {
 
 class _SplashScreenState extends State<SplashScreen> {
   final AuthService _authService = AuthService();
+  final UserService _userService = UserService();
 
   @override
   void initState() {
@@ -22,9 +26,55 @@ class _SplashScreenState extends State<SplashScreen> {
 
   Future<void> _startApp() async {
     await Future.delayed(const Duration(seconds: 2));
+    final prefs = await SharedPreferences.getInstance();
+    final hasSeenOnboarding = prefs.getBool('seenOnboarding') ?? false;
+    final acceptedTerms = prefs.getBool('acceptedTerms') ?? false;
 
     if (!mounted) return;
-    Navigator.pushReplacementNamed(context, '/onboarding1');
+
+    try {
+      final currentUser = _authService.currentUser;
+
+      if (currentUser != null) {
+        await currentUser.reload();
+        if (!currentUser.emailVerified) {
+          Navigator.pushReplacementNamed(context, '/verify-email');
+          return;
+        }
+
+        final user = await _userService.getUserById(currentUser.uid);
+        if (user == null) {
+          Navigator.pushReplacementNamed(context, '/login');
+          return;
+        }
+
+        Navigator.pushReplacementNamed(context, '/home');
+        return;
+      }
+    } catch (e) {
+      // Si hay cualquier error consultando Firebase, reenvía al login
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error iniciando la app: $e'),
+          backgroundColor: Colors.redAccent,
+        ),
+      );
+      Navigator.pushReplacementNamed(context, '/login');
+      return;
+    }
+
+    if (!hasSeenOnboarding) {
+      Navigator.pushReplacementNamed(context, '/onboarding1');
+      return;
+    }
+
+    if (!acceptedTerms) {
+      Navigator.pushReplacementNamed(context, '/terms');
+      return;
+    }
+
+    Navigator.pushReplacementNamed(context, '/login');
   }
 
   @override

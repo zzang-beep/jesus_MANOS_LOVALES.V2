@@ -11,7 +11,7 @@ import '../screens/profile_screen.dart';
 import '../screens/home_dashboard_screen.dart';
 
 class DiscoverScreen extends StatefulWidget {
-  const DiscoverScreen({Key? key}) : super(key: key);
+  const DiscoverScreen({super.key});
 
   @override
   State<DiscoverScreen> createState() => _DiscoverScreenState();
@@ -49,24 +49,34 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
 
   final List<Map<String, dynamic>> _demoCandidates = [
     {
+      "id": "cand_juan",
       "nombre": "Juan Rodríguez",
       "profesion": "Plomero Profesional",
-      "experiencia": "5 años de experiencia",
+      "experiencia": "5 años de experiencia resolviendo urgencias domiciliarias.",
       "ubicacion": "Zona Oeste",
+      "zona": "Zona Oeste",
+      "descripcion": "Especialista en instalaciones y reparaciones sin romper paredes.",
       "foto": "assets/images/inicio3.png",
     },
     {
+      "id": "cand_maria",
       "nombre": "María López",
       "profesion": "Niñera con referencias",
-      "experiencia": "3 años de experiencia",
+      "experiencia": "3 años acompañando familias en Palermo y Núñez.",
       "ubicacion": "Zona Este",
+      "zona": "Zona Este",
+      "descripcion":
+          "Docente de nivel inicial con disponibilidad part-time y primeros auxilios.",
       "foto": "assets/images/inicio1.png",
     },
     {
+      "id": "cand_lucas",
       "nombre": "Lucas Fernández",
       "profesion": "Profesor de matemáticas",
-      "experiencia": "10 años enseñando",
+      "experiencia": "10 años enseñando con enfoque personalizado.",
       "ubicacion": "Zona Norte",
+      "zona": "Zona Norte",
+      "descripcion": "Clases virtuales y presenciales para nivel secundario.",
       "foto": "assets/images/inicio2.png",
     },
   ];
@@ -248,7 +258,7 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
                         });
                       },
                     );
-                  }).toList(),
+                  }),
                   const SizedBox(height: 20),
                   SizedBox(
                     width: double.infinity,
@@ -433,8 +443,10 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
           onTap: () {
             Navigator.pushNamed(
               context,
-              '/detalle_candidato',
-              arguments: _services[index],
+              '/detalle_puesto',
+              arguments: {
+                'servicio': _services[index],
+              },
             );
           },
         );
@@ -443,6 +455,45 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
   }
 
   Widget _buildCandidatesList() {
+    if (_demoCandidates.isEmpty) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 32),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.people_outline,
+                  color: Colors.white30, size: 72),
+              const SizedBox(height: 12),
+              const Text(
+                'Aún no hay candidatos destacados para tu zona.',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: Colors.white70,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 6),
+              const Text(
+                'Publicá un servicio o amplía tus filtros para encontrar nuevos perfiles.',
+                textAlign: TextAlign.center,
+                style: TextStyle(color: Colors.white54),
+              ),
+              const SizedBox(height: 16),
+              OutlinedButton.icon(
+                onPressed: _showLocationFilter,
+                icon: const Icon(Icons.location_on, color: Colors.lightBlueAccent),
+                label: const Text(
+                  'Elegir otra zona',
+                  style: TextStyle(color: Colors.lightBlueAccent),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
     return ListView.builder(
       padding: const EdgeInsets.symmetric(horizontal: 20),
       itemCount: _demoCandidates.length,

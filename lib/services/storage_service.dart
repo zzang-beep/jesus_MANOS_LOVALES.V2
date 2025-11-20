@@ -115,4 +115,44 @@ class StorageService {
     final maxSizeBytes = maxSizeMB * 1024 * 1024;
     return size <= maxSizeBytes;
   }
+
+  // En StorageService - agregar este método
+  Future<String> uploadProfileImage(String userId, File imageFile) async {
+    try {
+      // ✅ Usar la misma ruta que en las reglas de seguridad
+      final String fileName =
+          'profile_${DateTime.now().millisecondsSinceEpoch}.jpg';
+      final Reference ref = _storage.ref().child('users/$userId/$fileName');
+
+      // ✅ Validar tamaño
+      if (!await isValidFileSize(imageFile)) {
+        throw 'La imagen excede el tamaño máximo de 5MB';
+      }
+
+      // ✅ Metadata consistente
+      final SettableMetadata metadata = SettableMetadata(
+        contentType: 'image/jpeg',
+        customMetadata: {
+          'uploadedBy': userId,
+          'uploadedAt': DateTime.now().toIso8601String(),
+        },
+      );
+
+      // ✅ Subir archivo
+      final UploadTask uploadTask = ref.putFile(imageFile, metadata);
+      final TaskSnapshot snapshot = await uploadTask;
+
+      // ✅ Verificar que se subió correctamente
+      if (snapshot.state == TaskState.success) {
+        final String downloadUrl = await snapshot.ref.getDownloadURL();
+        return downloadUrl;
+      } else {
+        throw 'Error en la subida: ${snapshot.state}';
+      }
+    } on FirebaseException catch (e) {
+      throw 'Error de Firebase Storage: ${e.message}';
+    } catch (e) {
+      throw 'Error al subir imagen: $e';
+    }
+  }
 }
